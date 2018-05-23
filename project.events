@@ -1,0 +1,2620 @@
+a:23:{s:4:"main";a:49:{s:7:"taskbar";N;s:10:"background";a:1:{s:11:"onmousedown";s:644:"global $appId, $showMenu, $showShare;
+if ( $button ){
+    c("desktopMenu")->show();
+    c("desktopMenu")->x = $SCREEN->width;
+    c("desktopMenu")->y = $y;
+    resize::resize_object( c("desktopMenu"), array("x" => $x) );
+    $showMenu = true;
+} else {
+    if ( $showMenu ){
+        resize::resize_object( c("desktopMenu"), array("x" => 0 - c("desktopMenu")->w) );
+        $showMenu = false;
+    }
+    if ( c("start")->alphaBlendValue >= 255 ){
+        c("startHide")->enable = true;
+    }
+    if ( $showShare ){
+        resize::resize_object( c("shareSel"), array("x" => $SCREEN->width) );
+        $showShare = false;
+    }
+}";}s:4:"time";a:1:{s:7:"onclick";s:328:"global $showClock;
+switch ( $showClock ){
+    case 0:
+        resize::resize_object( c("panelClock"), array("x" => $SCREEN->width - c("panelClock")->w) );
+        $showClock = 1;
+    break;
+    case 1:
+        $showClock = 0;
+        resize::resize_object( c("panelClock"), array("x" => $SCREEN->width) );
+    break;
+}";}s:8:"--fmedit";a:2:{s:8:"oncreate";s:7327:"
+c("time")->caption = Date("H:i");
+c("lockScreen->lsTime")->caption = Date("H:i");
+switch ( Date("M") ){
+    case "Jan":
+        $mon = "января";
+    break;
+    case "Feb":
+        $mon = "февраля";
+    break;
+    case "Mar":
+        $mon = "марта";
+    break;
+    case "Apr":
+        $mon = "апреля";
+    break;
+    case "May":
+        $mon = "мая";
+    break;
+    case "Jun":
+        $mon = "июня";
+    break;
+    case "Jul":
+        $mon = "июля";
+    break;
+    case "Aug":
+        $mon = "августа";
+    break;
+    case "Sep":
+        $mon = "сентября";
+    break;
+    case "Oct":
+        $mon = "октября";
+    break;
+    case "Nov":
+        $mon = "ноября";
+    break;
+    case "Dec":
+        $mon = "декабря";
+    break;
+}
+$i = 1;
+while( $i <= Date("t") ){
+    c("pcDays")->caption = c("pcDays")->caption . " " . $i;
+    $i++;
+}
+c("pcDate")->caption = Date("d") . " " . $mon . " " . Date("Y");
+if ( !is_writable( $progDir ) ){
+    message("Недостаточно прав доступа.\nЗапустите ozScript от имени администратора.");
+    $APPLICATION->terminate();
+}
+if ( file_exists( $progDir . "localStorage/data/desktop.ini" ) ){
+    ini::open( $progDir . "localStorage/data/desktop.ini" );
+    ini::readKeys("desktop", $keys);
+    foreach ( $keys as $key ){
+        switch ( $key ){
+            case "image":
+                ini::read("desktop", $key, $image);
+                c("background")->loadFromFile( $image );
+                c("settings->desktopImage")->loadFromFile( $image );
+            break;
+            case "imagePos":
+                ini::read("desktop", $key, $imagePos);
+                switch ( $imagePos ){
+                    case "proportional":
+                        c("settings->desktopImage")->center = true;
+                        c("settings->desktopImage")->proportional = true;
+                    break;
+                    case "stretch":
+                        c("settings->desktopImage")->center = false;
+                        c("settings->desktopImage")->stretch = true;
+                    break;
+                }
+            break;
+        }
+    }
+}
+if ( file_exists( $progDir . "localStorage/data/icons.ini" ) ){
+    ini::open( $progDir . "localStorage/data/icons.ini" );
+    ini::readSections( $sections );
+    foreach ( $sections as $sec ){
+        ini::readKeys( $sec, $keys );
+        foreach ( $keys as $key ){
+            switch ( $key ){
+                case "x";
+                    ini::read( $sec, $key, $x );
+                    c( $sec )->x = $x;
+                break;
+                case "y":
+                    ini::read( $sec, $key, $y );
+                    c( $sec )->y = $y;
+                break;
+            }
+        }
+    }
+}
+function niCTS(){
+    global $offlineMode;
+    err_no();
+    if ( !file_get_contents("http://ozscript.info/") ){
+        t::c("notifiInfo")->alphaBlendValue = 0;
+        t::c("notifiInfo")->show();
+        t::c("notifiInfo->niTShow")->enable = true;
+        t::c("notifiInfo")->x = t::c("notifiPlayerSP")->x;
+        t::c("notifiInfo")->y = t::c("notifiPlayerSP")->y;
+        t::c("notifiInfo->niText")->caption = "Ваш компьютер не подключен к интернету.\nНекоторые функции могут быть недоступны.";
+        t::c("notifiInfo->niTWait")->enable = true;
+        $offlineMode = true;
+    }
+    err_yes();
+}
+err_no();
+if ( file_exists("localStorage/data/main.ini") ){
+    ini::open("localStorage/data/main.ini");
+    ini::readSections( $sections );
+    foreach ( $sections as $sec ){
+        ini::readKeys( $sec, $keys );
+        foreach ( $keys as $key ){
+            switch ( $key ){
+                case "offlineMode":
+                    ini::read("main", "offlineMode", $offlineMode);
+                break;
+            }
+        }
+    }
+} else {
+    ini::open("localStorage/data/main.ini");
+    ini::write("main", "offlineMode", false);
+    $offlineMode = false;
+}
+err_yes();
+if ( file_exists("localStorage/data/lockScreen.ini") ){
+    ini::open("localStorage/data/lockScreen.ini" );
+    ini::readSections( $sections );
+    foreach ( $sections as $sec ){
+        ini::readKeys( $sec, $keys );
+        foreach ( $keys as $key ){
+            switch ( $key ){
+                case "color";
+                    ini::read( $sec, $key, $color );
+                    c("lockScreen")->color = $color;
+                    c("settings->LSColor")->brushColor = $color;
+                break;
+                case "image";
+                    ini::read( $sec, $key, $image );
+                    if ( $image ){
+                        ini::read( $sec, "imagePath", $imagePath );
+                        c("lockScreen->lsImage")->loadFromFile( $imagePath );
+                        c("settings->imageLS")->loadFromFile( $imagePath );
+                        c("settings->LSIDelete")->visible = true;
+                        c("settings->LSINF")->visible = false;
+                    }
+                break;
+            }
+        }
+    }
+}
+if ( file_exists("localStorage/data/iconsCreated.ini") ){
+    ini::open("localStorage/data/iconsCreated.ini" );
+    ini::readSections( $sections );
+    foreach ( $sections as $sec ){
+        c("settings->createIconList")->text .= $sec;
+        $icon = new UIIcon( $self );
+        $icon->parent = $self;
+        $icon->w = 48;
+        $icon->h = 48;
+        $icon->center = true;
+        $icon->proportional = true;
+        $icon->name = $sec;
+        ini::readKeys( $sec, $keys );
+        foreach ( $keys as $key ){
+            switch ( $key ){
+                case "x":
+                    ini::read($sec, $key, $x);
+                    $icon->x = $x;
+                break;
+                case "y":
+                    ini::read($sec, $key, $y);
+                    $icon->y = $y;
+                break;
+                case "image":
+                    ini::read($sec, $key, $image);
+                    $icon->loadFromFile( $image );
+                break;
+            }
+        }
+        $icon->create();
+    }
+}
+if ( file_exists("localStorage/data/panels.ini") ){
+    ini::open("localStorage/data/panels.ini");
+    ini::readSections( $sections );
+    foreach( $sections as $sec ){
+        ini::readKeys( $sec, $keys );
+        foreach( $keys as $key ){
+        switch ( $key ){
+            case "event":
+                ini::read($sec, $key, $event);
+                $event = explode("::", $event);
+                if ( $event[1] ){
+                    switch ( $event[0] ){
+                        case "run":
+                            c("start->" . $sec)->loadFromFile("localStorage/data/images/upFile.png");
+                            $GLOBALS["userPanels"][$sec] = $event;
+                        break;
+                        case "notifiShow":
+                            c("start->" . $sec)->loadFromFile("localStorage/data/images/notification.png");
+                            $GLOBALS["userPanels"][$sec] = $event;
+                        break;
+                        default:
+ 							$GLOBALS["userPanels"][$sec] = "err";
+                        break;
+                    }
+                }
+        }
+        }
+    }
+}
+if ( !$offlineMode ){
+    connectionCheck();
+}";s:12:"onclosequery";s:18:"$canClose = false;";}s:12:"iconexplorer";a:3:{s:7:"onclick";s:220:"c("explorer")->show();
+//c("appsSystem")->show();
+//c("appsSystem")->x = 0 - c("appsSystem")->w;
+//c("appsSystem")->y = $self->y + 8;
+//resize::resize_object( c("appsSystem"), array("x" => $self->x + $self->w + 8) );";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:10:"taskbarcat";a:1:{s:7:"onclick";s:283:"if ( c("start")->alphaBlendValue <= 0 ){
+    c("start")->show();
+    c("startShow")->enable = true;
+    c("start")->x = 0;
+    c("start")->y = $SCREEN->height - c("taskbar")->h - c("start")->h;
+}
+if ( c("start")->alphaBlendValue >= 255 ){
+    c("startHide")->enable = true;
+}";}s:8:"moveicon";a:1:{s:7:"ontimer";s:111:"global $sx, $sy, $fx, $fy, $id;
+$id->x = $fx - ($sx - cursor_pos_x());
+$id->y = $fy - ($sy - cursor_pos_y());";}s:2:"t\";N;s:9:"startshow";a:1:{s:7:"ontimer";s:149:"c("start")->alphaBlendValue += 10;
+if ( c("start")->alphaBlendValue == 250 ){
+    c("start")->alphaBlendValue = 255;
+    $self->enable = false;
+}";}s:9:"starthide";a:1:{s:7:"ontimer";s:170:"c("start")->alphaBlendValue -= 10;
+if ( c("start")->alphaBlendValue == 5 ){
+    c("start")->alphaBlendValue = 0;
+    c("start")->hide();
+    $self->enable = false;
+}";}s:9:"traysound";a:2:{s:11:"onmousedown";s:386:"global $showVolume;
+if ( $button ){
+    c("player")->show();
+} else {
+    if ( $showVolume ){
+        resize::resize_object( c("panelVolume"), array("y" => $SCREEN->height - c("panelVolume")->h - c("taskbar")->h) );
+        $showVolume = false;
+    } else {
+        $showVolume = true;
+        resize::resize_object( c("panelVolume"), array("y" => $SCREEN->height) );
+    }
+}";s:12:"onmouseenter";s:0:"";}s:7:"timeupd";a:1:{s:7:"ontimer";s:82:"c("time")->caption = Date("H:i");
+c("lockScreen->lsTime")->caption = Date("H:i");";}s:4:"tar\";N;s:5:"tar\\";N;s:6:"tar\\\";N;s:11:"traywindows";a:1:{s:7:"onclick";s:21:"c("applist")->show();";}s:7:"appmove";a:1:{s:7:"ontimer";s:130:"global $sx, $sy, $fx, $fy, $appId;
+c( $appId )->x = $fx - ($sx - cursor_pos_x());
+c( $appId )->y = $fy - ($sy - cursor_pos_y());";}s:7:"appshow";a:1:{s:7:"ontimer";s:168:"global $appId;
+c( $appId )->alphaBlendValue += 30;
+if ( c( $appId )->alphaBlendValue >= 240 ){
+    c( $appId )->alphaBlendValue = 255;
+    $self->enable = false;
+}";}s:7:"apphide";a:1:{s:7:"ontimer";s:291:"global $appId;
+c( $appId )->alphaBlendValue -= 30;
+if ( c( $appId )->alphaBlendValue <= 15 ){
+    c( $appId )->alphaBlendValue = 0;
+    c( $appId )->hide();
+    $self->enable = false;
+    file_delete($progDir . "localStorage/data/appsStarted/" . $appId . ".ozd");
+    appsUpdate();
+}";}s:14:"notifiplayersp";N;s:10:"iconplayer";a:3:{s:7:"onclick";s:20:"c("player")->show();";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:6:"npshow";a:1:{s:7:"ontimer";s:436:"global $npShowFull;
+if ( $npShowFull ){
+    c("notifiPlayer")->alphaBlendValue += 5;
+    if ( c("notifiPlayer")->alphaBlendValue >= 255 ){
+        c("npWait")->enable = true;
+        $self->enable = false;
+        $npShowFull = false;
+    }
+} else {
+    c("notifiPlayer")->alphaBlendValue += 5;
+    if ( c("notifiPlayer")->alphaBlendValue >= 75 ){
+        c("npWait")->enable = true;
+        $self->enable = false;
+    }
+}";}s:6:"nphide";a:1:{s:7:"ontimer";s:205:"global $npActive;
+if ( $npActive ){
+    c("notifiPlayer")->alphaBlendValue -= 5;
+    if ( c("notifiPlayer")->alphaBlendValue <= 0 ){
+        $self->enable = false;
+        $npActive = false;
+    }
+}";}s:6:"npwait";a:1:{s:7:"ontimer";s:51:"c("npHide")->enable = true;
+$self->enable = false;";}s:12:"iconsettings";a:3:{s:7:"onclick";s:22:"c("settings")->show();";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:11:"iconbrowser";a:3:{s:7:"onclick";s:175:"global $offlineMode;
+if ( $offlineMode ){
+    niShow($text = "Система запущена в режиме offline.\nПросмотр веб страниц недоступен.");
+} else {
+    c("browser")->show();
+}";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:11:"iconnotepad";a:3:{s:7:"onclick";s:21:"c("notepad")->show();";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:12:"timeronstart";a:1:{s:7:"ontimer";s:0:"";}s:15:"connectioncheck";a:1:{s:9:"onexecute";s:63:"$th = new TThread();
+$th->onExecute = "niCTS";
+$th->resume();";}s:6:"nishow";a:1:{s:9:"onexecute";s:239:"c("notifiInfo")->alphaBlendValue = 0;
+c("notifiInfo")->show();
+c("notifiInfo")->x = c("notifiPlayerSP")->x;
+c("notifiInfo")->y = c("notifiPlayerSP")->y;
+c("notifiInfo->niText")->caption = $text;
+c("notifiInfo->niShow")->enable = true;";}s:10:"panelclock";N;s:12:"iconappstore";a:3:{s:7:"onclick";s:180:"global $offlineMode;
+if ( $offlineMode ){
+    niShow($text = "Система запущена в режиме offline.\nЗапуск центра приложений невозможен.");
+} else {
+    c("appstore")->show();
+}";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:10:"serverauth";a:1:{s:9:"onexecute";s:1096:"err_no();
+if ( file_exists("localStorage/data/user.ini") ){
+    ini::open("localStorage/data/user.ini");
+    ini::read("auth", "user", $user);
+    ini::read("auth", "password", $password);
+    $session = crypt( Date("i"), "F9B2FA71B63DAC54F851C01C0F32FA09" );
+    if ( $user & $password ){
+        if ( $auth = file_get_contents("http://jointentrance.zz.vc/auth.php?user=" . $user . "&password=" . $password . "&session=" . $session) ){
+            switch ( $auth ){
+                case "SucessAuth":
+                    t::c("authShow")->enable = true;
+                    c("currentUser")->caption = $user;
+                break;
+                case "LoginPasswordWrong":
+                    t::c("auth")->show();
+                break;
+                default:
+                    t::c("auth")->show();
+                break;
+            }
+        } else {
+            t::c("auth")->show();
+        }
+    } else {
+        t::c("auth")->show();
+    }
+} else {
+    t::c("auth")->show();
+}
+t::c("lockScreen")->show();
+t::c("authTest->authTestHide")->enable = true;";}s:8:"authshow";a:1:{s:7:"ontimer";s:207:"global $user, $appId;
+$appId = "auth";
+if ( t::c("auth")->alphaBlendValue == 150 ){
+    t::c("main->appHide")->enable = true;
+    t::c("authTest->authTestHide")->enable = true;
+}
+$self->enable = false;";}s:6:"lsshow";a:1:{s:7:"ontimer";s:48:"c("lockScreen")->show();
+$self->enable = false;";}s:7:"userupd";a:1:{s:7:"ontimer";s:253:"global $user;
+if ( file_exists("localStorage/data/user.ini") ){
+    ini::open("localStorage/data/user.ini");
+    ini::read("auth", "user", $buff);
+    $user = $buff;
+    c("start->startUserNameText")->caption = $user;
+    $self->enable = false;
+}";}s:8:"iconchat";a:3:{s:7:"onclick";s:176:"global $offlineMode;
+if ( $offlineMode ){
+    niShow($text = "Система запущена в режиме offline.\nЗапуск центра приложений невозможен.");
+} else {
+    c("chat")->show();
+}";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:9:"iconpiano";a:3:{s:7:"onclick";s:19:"c("piano")->show();";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:11:"panelvolume";N;s:14:"volumetrackbar";a:3:{s:11:"onmousemove";s:231:"global $volumeChange;
+ini::open("localStorage/data/main.ini");
+if ( $volumeChange ){
+    if ( $y > 10 & $y < 101 ){
+        c("volumeCursor")->y = $y;
+        ini::write("main", "sound", $y);
+        soundSet( $y );
+    }
+}";s:11:"onmousedown";s:166:"global $volumeChange;
+$volumeChange = true;
+if ( $y > 10 & $y < 101 ){
+    c("volumeCursor")->y = $y;
+    ini::write("main", "sound", $y);
+    soundSet( $y );
+}";s:9:"onmouseup";s:45:"global $volumeChange;
+$volumeChange = false;";}s:12:"volumecursor";N;s:8:"soundset";a:1:{s:9:"onexecute";s:6884:"global $musicStream, $globalVolume;
+if ( $musicStream ){
+    switch ( $sound ){
+       case 10:
+            $replacedSound = 100;
+       break;
+       case 11:
+            $replacedSound = 99;
+       break;
+       case 12:
+            $replacedSound = 98;
+       break;
+       case 13:
+            $replacedSound = 97;
+       break;
+       case 14:
+            $replacedSound = 96;
+       break;
+       case 15:
+            $replacedSound = 95;
+       break;
+       case 16:
+            $replacedSound = 94;
+       break;
+       case 17:
+            $replacedSound = 93;
+       break;
+       case 18:
+            $replacedSound = 92;
+       break;
+       case 19:
+            $replacedSound = 91;
+       break;
+       case 20:
+            $replacedSound = 90;
+       break;
+       case 21:
+            $replacedSound = 89;
+       break;
+       case 22:
+            $replacedSound = 88;
+       break;
+       case 23:
+            $replacedSound = 87;
+       break;
+       case 24:
+            $replacedSound = 86;
+       break;
+       case 25:
+            $replacedSound = 85;
+       break;
+       case 26:
+            $replacedSound = 84;
+       break;
+       case 27:
+            $replacedSound = 83;
+       break;
+       case 28:
+            $replacedSound = 82;
+       break;
+       case 29:
+            $replacedSound = 81;
+       break;
+       case 30:
+            $replacedSound = 80;
+       break;
+       case 31:
+            $replacedSound = 79;
+       break;
+       case 32:
+            $replacedSound = 78;
+       break;
+       case 33:
+            $replacedSound = 77;
+       break;
+       case 34:
+            $replacedSound = 76;
+       break;
+       case 35:
+            $replacedSound = 75;
+       break;
+       case 36:
+            $replacedSound = 74;
+       break;
+       case 37:
+            $replacedSound = 73;
+       break;
+       case 38:
+            $replacedSound = 72;
+       break;
+       case 39:
+            $replacedSound = 71;
+       break;
+       case 40:
+            $replacedSound = 70;
+       break;
+       case 41:
+            $replacedSound = 69;
+       break;
+       case 42:
+            $replacedSound = 68;
+       break;
+       case 43:
+            $replacedSound = 67;
+       break;
+       case 44:
+            $replacedSound = 66;
+       break;
+       case 45:
+            $replacedSound = 65;
+       break;
+       case 46:
+            $replacedSound = 64;
+       break;
+       case 47:
+            $replacedSound = 63;
+       break;
+       case 48:
+            $replacedSound = 62;
+       break;
+       case 49:
+            $replacedSound = 61;
+       break;
+       case 50:
+            $replacedSound = 60;
+       break;
+       case 51:
+            $replacedSound = 59;
+       break;
+       case 52:
+            $replacedSound = 58;
+       break;
+       case 53:
+            $replacedSound = 57;
+       break;
+       case 54:
+            $replacedSound = 56;
+       break;
+       case 55:
+            $replacedSound = 55;
+       break;
+       case 56:
+            $replacedSound = 54;
+       break;
+       case 57:
+            $replacedSound = 53;
+       break;
+       case 58:
+            $replacedSound = 52;
+       break;
+       case 59:
+            $replacedSound = 51;
+       break;
+       case 60:
+            $replacedSound = 50;
+       break;
+       case 61:
+            $replacedSound = 49;
+       break;
+       case 62:
+            $replacedSound = 48;
+       break;
+       case 63:
+            $replacedSound = 47;
+       break;
+       case 64:
+            $replacedSound = 46;
+       break;
+       case 65:
+            $replacedSound = 45;
+       break;
+       case 66:
+            $replacedSound = 44;
+       break;
+       case 67:
+            $replacedSound = 43;
+       break;
+       case 68:
+            $replacedSound = 42;
+       break;
+       case 69:
+            $replacedSound = 41;
+       break;
+       case 70:
+            $replacedSound = 40;
+       break;
+       case 71:
+            $replacedSound = 39;
+       break;
+       case 72:
+            $replacedSound = 38;
+       break;
+       case 73:
+            $replacedSound = 37;
+       break;
+       case 74:
+            $replacedSound = 36;
+       break;
+       case 75:
+            $replacedSound = 35;
+       break;
+       case 76:
+            $replacedSound = 34;
+       break;
+       case 77:
+            $replacedSound = 33;
+       break;
+       case 78:
+            $replacedSound = 32;
+       break;
+       case 79:
+            $replacedSound = 31;
+       break;
+       case 80:
+            $replacedSound = 30;
+       break;
+       case 81:
+            $replacedSound = 29;
+       break;
+       case 82:
+            $replacedSound = 28;
+       break;
+       case 83:
+            $replacedSound = 27;
+       break;
+       case 84:
+            $replacedSound = 26;
+       break;
+       case 85:
+            $replacedSound = 25;
+       break;
+       case 86:
+            $replacedSound = 24;
+       break;
+       case 87:
+            $replacedSound = 23;
+       break;
+       case 88:
+            $replacedSound = 22;
+       break;
+       case 89:
+            $replacedSound = 21;
+       break;
+       case 90:
+            $replacedSound = 20;
+       break;
+       case 91:
+            $replacedSound = 19;
+       break;
+       case 92:
+            $replacedSound = 18;
+       break;
+       case 93:
+            $replacedSound = 17;
+       break;
+       case 94:
+            $replacedSound = 16;
+       break;
+       case 95:
+            $replacedSound = 15;
+       break;
+       case 96:
+            $replacedSound = 14;
+       break;
+       case 97:
+            $replacedSound = 13;
+       break;
+       case 98:
+            $replacedSound = 12;
+       break;
+       case 99:
+            $replacedSound = 11;
+       break;
+       case 100:
+            $replacedSound = 10;
+       break;
+       case 101:
+            $replacedSound = 9;
+       break;
+       case 102:
+            $replacedSound = 8;
+       break;
+       case 103:
+            $replacedSound = 7;
+       break;
+       case 104:
+            $replacedSound = 6;
+       break;
+       case 105:
+            $replacedSound = 5;
+       break;
+       case 106:
+            $replacedSound = 4;
+       break;
+       case 107:
+            $replacedSound = 3;
+       break;
+       case 108:
+            $replacedSound = 2;
+       break;
+       case 109:
+            $replacedSound = 1;
+       break;
+       case 110:
+            $replacedSound = 0;
+       break;
+    }
+    BASS::ChannelSetAttribute( $musicStream, BASS_ATTRIB_VOL, "0." . $replacedSound );
+    $globalVolume = $replacedSound;
+}";}s:6:"pcdate";N;s:6:"icomvm";a:3:{s:7:"onclick";s:21:"c("appToVM")->show();";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:6:"pcdays";N;s:11:"currentuser";N;s:4:"calc";a:3:{s:7:"onclick";s:24:"c("calculator")->show();";s:11:"onmousedown";s:200:"global $sx, $sy, $fx, $fy, $id;
+if ( $button ){
+    $id = $self;
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = $self->x;
+    $fy = $self->y;
+    c("moveIcon")->enable = true;
+}";s:9:"onmouseup";s:166:"c("moveIcon")->enable = false;
+ini::open($progDir . "localStorage/data/icons.ini");
+ini::write($self->name, "x", $self->x);
+ini::write($self->name, "y", $self->y);";}s:5:"langt";N;s:8:"langtest";a:1:{s:7:"ontimer";s:199:"global $systemLang;
+switch ( $systemLang->GetCurrentKeyboard ){
+    case "ru":
+        c("langT")->caption = "RUS";
+    break;
+    case "en":
+        c("langT")->caption = "ENG";
+    break;
+}";}}s:8:"explorer";a:32:{s:13:"explorerframe";a:2:{s:11:"onmousedown";s:730:"global $sx, $sy, $fx, $fy, $appId, $ePX, $ePY, $eR;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+if ( $button ){
+    switch ( $eR ){
+        case 0:
+            $ePX = c( $appId )->x;
+            $ePY = c( $appId )->y;
+            $eR = 1;
+            resize::resize_object( c( $appId ), array("h" => $SCREEN->height, "w" => $SCREEN->width, "x" => 0, "y" => 0) );
+        break;
+        case 1:
+            resize::resize_object( c( $appId ), array("h" => 416, "w" => 816, "x" => $ePX, "y" => $ePY) );
+            $eR = 0;
+        break;
+    }
+} else {
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = c( $appId )->x;
+    $fy = c( $appId )->y;
+    c("main->appMove")->enable = true;
+}";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:13:"explorerclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:8:"--fmedit";a:3:{s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:8:"oncreate";s:2620:"class TExplorer{
+    public $dir;//$dir
+    public function __construct( $dir = NULL ){//конструктор
+        $this->dir = str_replace(array("\\", "//"), "/", $dir);//устанавливаем $dir, заменяя все \ и // на /
+    }
+    public function setDir( $dir ){//установить начальную директорию
+
+        $this->dir = str_replace(array("\\", "//"), "/", $dir);//устанавливаем $dir, заменяя все \ и // на /
+    }
+    public function gotoUp( $dir ){//Переход в директорию
+        if( $this->dir{strlen($this->dir)-1} == "/" )//если последний символ строка - слеш(/)
+            $this->dir.=str_replace(array("//", "\\", '/', '\\'), "", $dir);//
+        else
+            $this->dir.="/".str_replace(array("//", "\\", '/', '\\'), "", $dir);//добавляем к dir значение $dir, заменяя все \ и // на /
+    }
+    public function gotoDown( ){//Вернуться в предыдущую папку
+        $this->dir = self::getLastDir( $this->dir );//устанавливаем dir  на путь, который вернет getLastDir
+    }
+    public function getLastDir( $dir ){//вернуть последнюю директорию
+        $dir = substr($dir, 0, strrpos($dir, "/"));//находим последнее вхождение / в строке $dir, и обрезаем
+        return $dir;//возвращаем обработанную строку
+    }
+    public function getFiles( ){#вернуть файлы из текущей директории
+        $aFiles = scandir($this->dir);//сканируем директорию, на выходе получаем массив
+
+        foreach( $aFiles as $file){//разбираем массив
+            if( $file == "." or $file == ".." ) continue;//ничего не делаем, если названия файлов - . или ..
+            if( !is_file($this->dir.'/'.$file) )//если это НЕ файл
+                $return .= "/".$file."  [Папка]"._BR_;//к переменной приписываем о том, что это папка
+            else//иначе
+               $return.= $file."    [Файл ".fileExt($this->dir.'/'.$file."]")._BR_;//это файл, пишем что это файл и его формат
+        }
+        return $return;//возвращаем папки/файлы
+
+    }
+}
+global $obj, $arrEx, $eR;//для большей удобности
+$obj = new TExplorer( "C:/" );//устанавливаем начальную директорию
+c("files")->text = "/..."._BR_.$obj->getFiles( );//записываем в listbox1 список всех файлов и папок начальной директории
+c("openFile->files")->text = c("files")->text = "/..."._BR_.$obj->getFiles( );
+
+$size = osinfo_disktotal( "C:\\" );
+$size = $size ? $size : 1;
+$total = number_format(($size / 1024) / 1024 / 1024, 2) . ' GB';
+
+$size = osinfo_diskfree( "C:\\" );
+$size = $size ? $size : 1;
+$free = number_format(($size / 1024) / 1024 / 1024, 2);
+
+c("lsCSize")->caption = "Свободно " . $free . " из " . $total;
+
+$self->doubleBuffered = true;";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:5:"files";a:2:{s:10:"ondblclick";s:15:"explorerOpen();";s:7:"onclick";s:3203:"global $obj;
+if ( $self->items->selected ){
+    c("previewNotSelect")->visible = false;
+    c("previewFileImage")->visible = true;
+    c("previewFileSize")->visible = true;
+    c("previewFileType")->visible = true;
+    c("previewName")->visible = true;
+    $iSelect = $self->items->selected;
+    $e = explode("[", $iSelect);
+    if ( $iSelect[0] == "/" ){
+        c("previewFileType")->caption = "Тип: Папка";
+        c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/folder.png");
+        c("previewFileSize")->visible = false;
+        c("previewName")->caption = trim($e[0]);
+    } else {
+        $ext = fileExt( $obj->dir.'/'.trim($e[0]) );
+        $size = filesize( $obj->dir.'/'.trim($e[0]) );
+        c("previewFileSize")->visible = true;
+        c("previewFileSize")->caption = "Размер: " . number_format( ($size / 1024) / 1024, 2) . " MB";
+        c("previewName")->caption = basename( $obj->dir.'/'.trim($e[0]) );
+        switch ( $ext ){
+            case "png";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/filePng.png");
+                c("previewFileType")->caption = "Тип: Рисунок PNG";
+            break;
+            case "jpg";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileJpg.png");
+                c("previewFileType")->caption = "Тип: Рисунок JPG";
+            break;
+            case "gif";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileGif.png");
+                c("previewFileType")->caption = "Тип: Рисунок GIF";
+            break;
+            case "bmp";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileBmp.png");
+                c("previewFileType")->caption = "Тип: Рисунок BMP";
+            break;
+            case "mp3";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileMp3.png");
+                c("previewFileType")->caption = "Тип: Звуковой файл MP3";
+            break;
+            case "wav";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileWav.png");
+                c("previewFileType")->caption = "Тип: Звуковой файл WAV";
+            break;
+            case "zip";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileZip.png");
+                c("previewFileType")->caption = "Тип: Архив ZIP";
+            break;
+            case "ozd";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileOzd.png");
+                c("previewFileType")->caption = "Тип: Файл данных ozScript";
+            break;
+            default:
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/file.png");
+                c("previewFileType")->caption = "Тип: Файл " . $ext;
+            break;
+        }
+    }
+} else {
+    c("previewNotSelect")->visible = true;
+    c("previewFileImage")->visible = false;
+    c("previewFileSize")->visible = false;
+    c("previewFileType")->visible = false;
+    c("previewName")->visible = false;
+}";}s:11:"previewfile";N;s:16:"previewfileimage";N;s:15:"previewfiletype";N;s:15:"previewfilesize";N;s:11:"previewname";N;s:16:"previewnotselect";N;s:9:"openfileo";N;s:10:"openfileot";a:1:{s:7:"onclick";s:15:"explorerOpen();";}s:6:"shape2";N;s:6:"shape3";N;s:6:"shape4";N;s:6:"shape5";N;s:6:"shape6";N;s:6:"shape7";N;s:6:"shape8";N;s:11:"clipboardin";a:1:{s:7:"onclick";s:283:"global $obj, $exClipboard;
+if ( c("files")->items->selected ){
+    if ( $obj->dir ){
+        $file = explode("  [Файл", c("files")->items->selected);
+        if ( is_file( $obj->dir . "/" . $file[0]) ){
+            $exClipboard = $obj->dir . "/" . $file[0];
+        }
+    }
+}";}s:13:"clipboardcopy";a:1:{s:7:"onclick";s:430:"global $exClipboard, $obj;
+if ( $exClipboard ){
+    if ( $obj->dir ){
+        if ( file_exists( $obj->dir . basename( $exClipboard ) ) ){
+            copy($exClipboard, $obj->dir . "/" . basenameNoExt( $exClipboard ) . " копия." . fileExt( $exClipboard ) );
+        } else {
+            copy($exClipboard, $obj->dir . "/" . basename( $exClipboard ) );
+        }
+    }
+}
+c("files")->text = "/..."._BR_.$obj->getFiles(  );";}s:14:"clipboardpaste";a:1:{s:7:"onclick";s:212:"global $exClipboard, $obj;
+if ( $exClipboard ){
+    if ( $obj->dir ){
+        file_move($exClipboard, $obj->dir . "/" . basename( $exClipboard ) );
+    }
+}
+c("files")->text = "/..."._BR_.$obj->getFiles(  );";}s:10:"explorerds";N;s:7:"shape10";N;s:6:"label4";N;s:7:"shape11";N;s:4:"lsoz";a:1:{s:7:"onclick";s:181:"global $obj;
+$obj->dir = $progDir . "localStorage/";
+c("files")->text = $obj->getFiles();
+resize::resize_object( c("explorerDS"), array("h" => 0) );
+c("edsHide")->enable = true;";}s:3:"lsc";a:1:{s:7:"onclick";s:161:"global $obj;
+$obj->dir = "C:\\";
+c("files")->text = $obj->getFiles();
+resize::resize_object( c("explorerDS"), array("h" => 0) );
+c("edsHide")->enable = true;";}s:7:"lscsize";N;s:7:"edshide";a:1:{s:7:"ontimer";s:48:"c("explorerDS")->hide();
+$self->enable = false;";}s:12:"exploreropen";a:1:{s:9:"onexecute";s:2501:"global $obj, $noteOpen, $notepadNew;
+err_no();
+$iSelect = c("files")->items->selected;
+if ( $iSelect == "/..." ){
+    $obj->gotoDown(  );
+    c("files")->text = "/..."._BR_.$obj->getFiles(  );
+    if ( $obj->dir == $progDir . "localStorage" ){
+        $arr = explode(_BR_, $self->text);
+        unset($arr[0]);
+        $self->text = implode(_BR_, $arr);
+    }
+} else {
+    $e = explode("[", $iSelect);
+    if( $iSelect[0] == "/" ){
+        $obj->gotoUp( trim($e[0]) );
+        c("files")->text = "/..."._BR_.$obj->getFiles(  );
+    } else {
+        $ext = fileExt( $obj->dir.'/'.trim($e[0]) );
+        switch ( $ext ){
+            case "txt";
+                $noteOpen = $obj->dir.'/'.trim($e[0]);
+                c("notepad")->show();
+                notepadOpen();
+            break;
+            case "ini";
+                $noteOpen = $obj->dir.'/'.trim($e[0]);
+                c("notepad")->show();
+                notepadOpen();
+            break;
+            case "bat";
+                $noteOpen = $obj->dir.'/'.trim($e[0]);
+                c("notepad")->show();
+                notepadOpen();
+            break;
+            case "cmd";
+                $noteOpen = $obj->dir.'/'.trim($e[0]);
+                c("notepad")->show();
+                notepadOpen();
+            break;
+            case "ozd";
+                $noteOpen = $obj->dir.'/'.trim($e[0]);
+                c("notepad")->show();
+                notepadOpen();
+            break;
+            case "jpg":
+                c("imageview")->show();
+                c("imageview->imageviewMain")->loadFromFile( $obj->dir.'/'.trim($e[0]) );
+            break;
+            case "png":
+                c("imageview")->show();
+                c("imageview->imageviewMain")->loadFromFile( $obj->dir.'/'.trim($e[0]) );
+            break;
+            case "gif":
+                c("imageview")->show();
+                c("imageview->imageviewMain")->loadFromFile( $obj->dir.'/'.trim($e[0]) );
+            break;
+            case "bmp":
+                c("imageview")->show();
+                c("imageview->imageviewMain")->loadFromFile( $obj->dir.'/'.trim($e[0]) );
+            break;
+            case "mp3":
+                c("player->playerTracklist")->text .= $obj->dir.'/'.trim($e[0]);
+                c("player->playerTracklist")->itemIndex = c("player->playerTracklist")->items->count - 1;
+                ozPlayerControl("play");
+            break;
+        }
+    }
+}";}s:5:"expfd";a:1:{s:7:"onclick";s:331:"global $obj;
+if ( c("files")->items->selected ){
+    if ( $obj->dir ){
+        $file = explode("  [Файл", c("files")->items->selected);
+        if ( is_file( $obj->dir . "/" . $file[0]) ){
+            file_delete($obj->dir . "/" . $file[0]);
+            c("files")->text = "/..."._BR_.$obj->getFiles(  );
+        }
+    }
+}";}}s:5:"start";a:15:{s:8:"--fmedit";a:1:{s:12:"onclosequery";s:18:"$canClose = false;";}s:13:"startusername";N;s:17:"startusernametext";N;s:12:"startuserpic";N;s:11:"startuserpi";N;s:6:"shape1";N;s:8:"startpwo";a:1:{s:7:"onclick";s:26:"$APPLICATION->terminate();";}s:5:"shape";a:0:{}s:6:"shape2";a:0:{}s:6:"shape3";a:0:{}s:6:"shape4";a:0:{}s:10:"userpanel1";a:1:{s:11:"onmousedown";s:950:"global $currentPanel;
+if ( $button ){
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        ini::open("localStorage/data/panels.ini");
+        ini::deleteSection($self->name, true);
+        $GLOBALS["userPanels"][$self->name] = false;
+        $self->loadFromFile("localStorage/data/images/upAdd.png");
+    }
+} else {
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        if ( $GLOBALS["userPanels"][$self->name][1] ){
+            switch ( $GLOBALS["userPanels"][$self->name][0] ){
+                case "run":
+                    run( $GLOBALS["userPanels"][$self->name][1], false );
+                break;
+                case "notifiShow":
+                    niShow( $GLOBALS["userPanels"][$self->name][1] );
+                break;
+            }
+        } else {
+            niShow("Ошибка в синтаксисе команды.");
+        }
+    } else {
+        c("startAddPanel")->show();
+        $currentPanel = $self->name;
+    }
+}";}s:10:"userpanel2";a:1:{s:11:"onmousedown";s:951:"global $currentPanel;
+if ( $button ){
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        ini::open("localStorage/data/panels.ini");
+        ini::deleteSection($self->name, false);
+        $GLOBALS["userPanels"][$self->name] = false;
+        $self->loadFromFile("localStorage/data/images/upAdd.png");
+    }
+} else {
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        if ( $GLOBALS["userPanels"][$self->name][1] ){
+            switch ( $GLOBALS["userPanels"][$self->name][0] ){
+                case "run":
+                    run( $GLOBALS["userPanels"][$self->name][1], false );
+                break;
+                case "notifiShow":
+                    niShow( $GLOBALS["userPanels"][$self->name][1] );
+                break;
+            }
+        } else {
+            niShow("Ошибка в синтаксисе команды.");
+        }
+    } else {
+        c("startAddPanel")->show();
+        $currentPanel = $self->name;
+    }
+}";}s:10:"userpanel3";a:1:{s:11:"onmousedown";s:951:"global $currentPanel;
+if ( $button ){
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        ini::open("localStorage/data/panels.ini");
+        ini::deleteSection($self->name, false);
+        $GLOBALS["userPanels"][$self->name] = false;
+        $self->loadFromFile("localStorage/data/images/upAdd.png");
+    }
+} else {
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        if ( $GLOBALS["userPanels"][$self->name][1] ){
+            switch ( $GLOBALS["userPanels"][$self->name][0] ){
+                case "run":
+                    run( $GLOBALS["userPanels"][$self->name][1], false );
+                break;
+                case "notifiShow":
+                    niShow( $GLOBALS["userPanels"][$self->name][1] );
+                break;
+            }
+        } else {
+            niShow("Ошибка в синтаксисе команды.");
+        }
+    } else {
+        c("startAddPanel")->show();
+        $currentPanel = $self->name;
+    }
+}";}s:10:"userpanel4";a:1:{s:11:"onmousedown";s:951:"global $currentPanel;
+if ( $button ){
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        ini::open("localStorage/data/panels.ini");
+        ini::deleteSection($self->name, false);
+        $GLOBALS["userPanels"][$self->name] = false;
+        $self->loadFromFile("localStorage/data/images/upAdd.png");
+    }
+} else {
+    if ( $GLOBALS["userPanels"][$self->name] ){
+        if ( $GLOBALS["userPanels"][$self->name][1] ){
+            switch ( $GLOBALS["userPanels"][$self->name][0] ){
+                case "run":
+                    run( $GLOBALS["userPanels"][$self->name][1], false );
+                break;
+                case "notifiShow":
+                    niShow( $GLOBALS["userPanels"][$self->name][1] );
+                break;
+            }
+        } else {
+            niShow("Ошибка в синтаксисе команды.");
+        }
+    } else {
+        c("startAddPanel")->show();
+        $currentPanel = $self->name;
+    }
+}";}}s:7:"applist";a:10:{s:6:"label1";N;s:12:"applistclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:8:"--fmedit";a:2:{s:6:"onshow";s:88:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:12:"applistframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:10:"appsupdate";a:1:{s:9:"onexecute";s:281:"$apps = DOC_ROOT . "localStorage/data/appsStarted/*.*";
+c("apps")->text = "";
+foreach ( glob ( $apps ) as $app ){
+    $handle = file_get_contents( $app );
+    $form = basenameNoExt( $app );
+    if ( $handle == c( $form )->handle ){
+        c("apps")->text .= $form;
+    }
+}";}s:10:"applistcat";a:1:{s:7:"onclick";s:162:"global $appId;
+if ( c("apps")->items->selected ){
+    $appId = c("apps")->items->selected;
+    c("main->appHide")->enable = true;
+    c("apps")->text = "";
+}";}s:9:"applistca";N;s:9:"applistua";N;s:10:"applistuat";a:1:{s:7:"onclick";s:36:"c("apps")->text = "";
+appsUpdate();";}s:4:"apps";a:2:{s:9:"onkeydown";s:200:"global $appId;
+if ( $key == VK_DELETE ){
+    if ( $self->items->selected ){
+        $appId = $self->items->selected;
+        c("main->appHide")->enable = true;
+        $self->text = "";
+    }
+}";s:10:"ondblclick";s:78:"if ( $self->items->selected ){
+    c( $self->items->selected )->toFront();
+}";}}s:6:"player";a:16:{s:6:"label1";N;s:11:"playerframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:11:"playerclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:8:"--fmedit";a:3:{s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";s:8:"oncreate";s:0:"";}s:13:"playerbuttons";N;s:15:"playertrackback";a:1:{s:7:"onclick";s:35:"ozPlayerControl($control = "back");";}s:8:"playerpp";a:1:{s:7:"onclick";s:35:"ozPlayerControl($control = "play");";}s:18:"playertrackforward";a:1:{s:7:"onclick";s:38:"ozPlayerControl($control = "forward");";}s:8:"playernp";N;s:8:"playertn";N;s:15:"playertracklist";a:1:{s:10:"ondblclick";s:121:"global $musicStream;
+if ( $musicStream ){
+    BASS::StreamFree( $musicStream );
+}
+ozPlayerControl($control = "play");";}s:8:"playercs";N;s:13:"playeraddsong";a:1:{s:7:"onclick";s:376:"if ( c("openDlg")->execute() ){
+    $files = c("openDlg")->files;
+    foreach ( $files as $file ){
+        c("playerTracklist")->text .= $file;
+    }
+}
+
+/*
+global $formats, $odClose, $output, $outputType;
+$odClose = true;
+$output = array("0" => c("playerTracklist"));
+$outputType = "text+";
+$formats = array("0" => "mp3", "1" => "wav");
+c("openFile")->show();
+*/";}s:14:"playerdeltrack";a:1:{s:7:"onclick";s:222:"if( c("playerTracklist")->items->selected ){
+    $i = c("playerTracklist")->itemIndex;
+    $arr = explode(_BR_, c("playerTracklist")->text);
+    unset($arr[$i]);
+    c("playerTracklist")->text = implode(_BR_, $arr);
+}";}s:7:"opendlg";N;s:15:"ozplayercontrol";a:1:{s:9:"onexecute";s:5962:"global $npActive, $musicStream, $globalVolume;
+
+if ( BASS::load("bass.dll") ){
+    switch ( $control ){
+        case "play":
+            if ( !$musicStream ){
+                $musicStream = BASS::StreamCreateFile(false, c("playerTracklist")->items->selected, 0, 0, 0);
+                if ( $globalVolume ){
+                    BASS::ChannelSetAttribute( $musicStream, BASS_ATTRIB_VOL, "0." . $globalVolume );
+                }
+                BASS::ChannelPlay( $musicStream );
+                c("playerTN")->caption = basename( c("playerTracklist")->items->selected );
+                c("notifiPlayer->labelNPName")->caption = basename( c("playerTracklist")->items->selected );
+                c("playerPP")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                c("notifiPlayer->imageNPPlayPause")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                $npActive = true;
+                c("notifiPlayer")->show();
+                c("notifiPlayer")->x = c("main->notifiPlayerSP")->x;
+                c("notifiPlayer")->y = c("main->notifiPlayerSP")->y;
+                if ( c("main->npWait")->enable ){
+                    c("main->npWait")->enable = false;
+                }
+                c("main->npShow")->enable = true;
+            } elseif ( BASS::ChannelIsActive( $musicStream ) == 1 ){
+                c("playerPP")->loadFromFile( $progDir . "localStorage/data/images/mediaPlay.png" );
+                c("notifiPlayer->imageNPPlayPause")->loadFromFile( $progDir . "localStorage/data/images/mediaPlay.png" );
+                BASS::Pause( $musicStream );
+            } elseif ( BASS::ChannelIsActive( $musicStream ) == 3 ){
+                BASS::Start( $musicStream );
+                c("playerPP")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                c("notifiPlayer->imageNPPlayPause")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+            } else {
+                BASS::StreamFree( $musicStream );
+                $musicStream = BASS::StreamCreateFile(false, c("playerTracklist")->items->selected, 0, 0, 0);
+                if ( $globalVolume ){
+                    BASS::ChannelSetAttribute( $musicStream, BASS_ATTRIB_VOL, "0." . $globalVolume );
+                }
+                BASS::ChannelPlay( $musicStream );
+                c("playerTN")->caption = basename( c("playerTracklist")->items->selected );
+                c("notifiPlayer->labelNPName")->caption = basename( c("playerTracklist")->items->selected );
+                c("playerPP")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                c("notifiPlayer->imageNPPlayPause")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                $npActive = true;
+                c("notifiPlayer")->show();
+                c("notifiPlayer")->x = c("main->notifiPlayerSP")->x;
+                c("notifiPlayer")->y = c("main->notifiPlayerSP")->y;
+                if ( c("main->npWait")->enable ){
+                    c("main->npWait")->enable = false;
+                }
+                c("main->npShow")->enable = true;
+            }
+        break;
+        case "back":
+                if ( $musicStream ){
+                    BASS::StreamFree( $musicStream );
+                }
+                c("playerTracklist")->itemIndex--;
+                $musicStream = BASS::StreamCreateFile(false, c("playerTracklist")->items->selected, 0, 0, 0);
+                if ( $globalVolume ){
+                    BASS::ChannelSetAttribute( $musicStream, BASS_ATTRIB_VOL, "0." . $globalVolume );
+                }
+                BASS::ChannelPlay( $musicStream );
+                c("playerTN")->caption = basename( c("playerTracklist")->items->selected );
+                c("notifiPlayer->labelNPName")->caption = basename( c("playerTracklist")->items->selected );
+                c("playerPP")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                c("notifiPlayer->imageNPPlayPause")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                $npActive = true;
+                c("notifiPlayer")->show();
+                c("notifiPlayer")->x = c("main->notifiPlayerSP")->x;
+                c("notifiPlayer")->y = c("main->notifiPlayerSP")->y;
+                if ( c("main->npWait")->enable ){
+                    c("main->npWait")->enable = false;
+                }
+                c("main->npShow")->enable = true;
+        break;
+        case "forward":
+                if ( $musicStream ){
+                    BASS::StreamFree( $musicStream );
+                }
+                c("playerTracklist")->itemIndex++;
+                $musicStream = BASS::StreamCreateFile(false, c("playerTracklist")->items->selected, 0, 0, 0);
+                if ( $globalVolume ){
+                    BASS::ChannelSetAttribute( $musicStream, BASS_ATTRIB_VOL, "0." . $globalVolume );
+                }
+                BASS::ChannelPlay( $musicStream );
+                c("playerTN")->caption = basename( c("playerTracklist")->items->selected );
+                c("notifiPlayer->labelNPName")->caption = basename( c("playerTracklist")->items->selected );
+                c("playerPP")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                c("notifiPlayer->imageNPPlayPause")->loadFromFile( $progDir . "localStorage/data/images/mediaPause.png" );
+                $npActive = true;
+                c("notifiPlayer")->show();
+                c("notifiPlayer")->x = c("main->notifiPlayerSP")->x;
+                c("notifiPlayer")->y = c("main->notifiPlayerSP")->y;
+                if ( c("main->npWait")->enable ){
+                    c("main->npWait")->enable = false;
+                }
+                c("main->npShow")->enable = true;
+        break;
+    }
+}";}}s:8:"openfile";a:13:{s:8:"--fmedit";a:2:{s:6:"onshow";s:73:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:13:"openfileframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:6:"label1";N;s:13:"openfileclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:5:"files";a:2:{s:7:"onclick";s:2325:"global $obj;
+if ( $self->items->selected ){
+    c("previewNotSelect")->visible = false;
+    c("previewFileImage")->visible = true;
+    c("previewFileSize")->visible = true;
+    c("previewFileType")->visible = true;
+    c("previewName")->visible = true;
+    $iSelect = $self->items->selected;
+    $e = explode("[", $iSelect);
+    if ( $iSelect[0] == "/" ){
+        c("previewFileType")->caption = "Тип: Папка";
+        c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/folder.png");
+        c("previewFileSize")->visible = false;
+        c("previewName")->caption = trim($e[0]);
+    } else {
+        $ext = fileExt( $obj->dir.'/'.trim($e[0]) );
+        $size = filesize( $obj->dir.'/'.trim($e[0]) );
+        c("previewFileSize")->visible = true;
+        c("previewFileSize")->caption = "Размер: " . number_format( ($size / 1024) / 1024, 2) . " MB";
+        c("previewName")->caption = basename( $obj->dir.'/'.trim($e[0]) );
+        switch ( $ext ){
+            case "png";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/filePng.png");
+                c("previewFileType")->caption = "Тип: Рисунок PNG";
+            break;
+            case "jpg";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileJpg.png");
+                c("previewFileType")->caption = "Тип: Рисунок JPG";
+            break;
+            case "gif";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileGif.png");
+                c("previewFileType")->caption = "Тип: Рисунок GIF";
+            break;
+            case "ozd";
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/fileOzd.png");
+                c("previewFileType")->caption = "Тип: Файл данных ozScript";
+            break;
+            default:
+                c("previewFileImage")->loadFromFile("$progDir/localStorage/data/images/file.png");
+                c("previewFileType")->caption = "Тип: Файл " . $ext;
+            break;
+        }
+    }
+} else {
+    c("previewNotSelect")->visible = true;
+    c("previewFileImage")->visible = false;
+    c("previewFileSize")->visible = false;
+    c("previewFileType")->visible = false;
+    c("previewName")->visible = false;
+}";s:10:"ondblclick";s:1650:"global $obj, $formats, $output, $odClose, $outputType;
+
+$iSelect = $self->items->selected;
+if ( $iSelect == "/..." ){
+    $obj->gotoDown(  );
+    $self->text = "/..."._BR_.$obj->getFiles(  );
+} else {
+    $e = explode("[", $iSelect);
+    if ( $iSelect[0] == "/" ){
+        $obj->gotoUp( trim($e[0]) );
+        $self->text = "/..."._BR_.$obj->getFiles(  );
+    } else {
+        if ( $formats ){
+            $ext = fileExt( $obj->dir.'/'.trim($e[0]) );
+            foreach ( $formats as $format ){
+                if ( $format == $ext ){
+                    foreach ( $output as $object ){
+                        switch ( $outputType ){
+                            case "image":
+                                $object->loadFromFile( $obj->dir.'/'.trim($e[0]) );
+                            break;
+                            case "text":
+                                $object->text = $obj->dir.'/'.trim($e[0]);
+                            break;
+                            case "text+":
+                                $object->text .= $obj->dir.'/'.trim($e[0]);
+                            break;
+                        }
+                    }
+                    if ( $odClose ){
+                        $odClose = false;
+                        c("openFile")->hide();
+                    }
+                }
+            }
+        } else {
+            foreach ( $output as $object ){
+                $object->loadFromFile( $obj->dir.'/'.trim($e[0]) );
+            }
+            if ( $odClose ){
+                $odClose = false;
+                c("openFile")->hide();
+            }
+        }
+    }
+}";}s:11:"previewfile";N;s:16:"previewfileimage";N;s:15:"previewfiletype";N;s:15:"previewfilesize";N;s:11:"previewname";N;s:16:"previewnotselect";N;s:9:"openfileo";N;s:10:"openfileot";N;}s:12:"notifiplayer";a:6:{s:7:"labelnp";N;s:11:"labelnpname";N;s:11:"imagenpback";a:1:{s:7:"onclick";s:35:"ozPlayerControl($control = "back");";}s:16:"imagenpplaypause";a:1:{s:7:"onclick";s:35:"ozPlayerControl($control = "play");";}s:14:"imagenpforward";a:1:{s:7:"onclick";s:38:"ozPlayerControl($control = "forward");";}s:8:"--fmedit";a:2:{s:12:"onmouseenter";s:203:"global $npActive, $npShowFull;
+$npActive = false;
+    if ( $self->alphaBlendValue >= 75 ){
+    $npShowFull = true;
+    c("main->npShow")->enable = true;
+    }
+    c("main->npWait")->enable = false;";s:12:"onmouseleave";s:71:"global $npActive;
+c("main->npWait")->enable = true;
+$npActive = true;";}}s:8:"settings";a:79:{s:6:"label1";N;s:13:"settingsframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:13:"settingsclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:8:"--fmedit";a:3:{s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";s:8:"oncreate";s:1087:"$get = shell_exec("ipconfig");
+$ethernet = iconv("CP866", "CP1251", $get);
+$adapters = explode("Ethernet adapter ", $ethernet);
+$count = count( $adapters );
+for ( $add = 1; $add <= $count; $add++ ){
+    $adapter = explode(": ", $adapters[$add]);
+    $adapter = str_replace("   DNS-суффикс подключения . . . . . ", "", $adapter);
+    $adapter = str_replace("   Локальный IPv6-адрес канала . . . ", "", $adapter);
+    $adapter = str_replace("   IPv4-адрес. . . . . . . . . . . . ", "", $adapter);
+    $adapter = str_replace("   Маска подсети . . . . . . . . . . ", "", $adapter);
+    $adapter = str_replace("   Основной шлюз. . . . . . . . . ", "", $adapter);
+    $adapter = str_replace("   Состояние среды. . . . . . . . ", "", $adapter);
+    $adapter = str_replace("Среда передачи недоступна.", "", $adapter);
+    $adapter = str_replace("\n", "", $adapter);
+    c("adapters")->text .= $adapter[0];
+    c("adapters")->text = str_replace("   Состояние среды. . . . . . . . ", "", c("adapters")->text);
+    c("adapters")->text = str_replace(":", "", c("adapters")->text);
+}";}s:15:"settingsdesktop";N;s:10:"settingsdt";a:1:{s:7:"onclick";s:29:"c("panelDesktop")->toFront();";}s:10:"settingsdi";N;s:12:"paneldesktop";N;s:12:"desktopimage";N;s:8:"buttondu";N;s:9:"buttondut";a:1:{s:7:"onclick";s:290:"if ( c("openDlg")->execute() ){
+    c("desktopImage")->loadFromFile( c("openDlg")->fileName );
+    c("main->background")->loadFromFile( c("openDlg")->fileName );
+    ini::open( $progDir . "localStorage/data/desktop.ini" );
+    ini::write("desktop", "image", c("openDlg")->fileName );
+}";}s:6:"label3";N;s:6:"shape3";N;s:4:"disc";a:1:{s:7:"onclick";s:332:"c("DISS")->font->color = 13091773;
+c("DISP")->font->color = 13091773;
+$self->font->color = 16777215;
+c("main->background")->center = true;
+c("main->background")->stretch = false;
+c("main->background")->proportional = false;
+ini::open( $progDir . "localStorage/data/desktop.ini" );
+ini::write("desktop", "imagePos", "center");";}s:4:"diss";a:1:{s:7:"onclick";s:333:"c("DISC")->font->color = 13091773;
+c("DISP")->font->color = 13091773;
+$self->font->color = 16777215;
+c("main->background")->center = false;
+c("main->background")->stretch = true;
+c("main->background")->proportional = false;
+ini::open( $progDir . "localStorage/data/desktop.ini" );
+ini::write("desktop", "imagePos", "stretch");";}s:4:"disp";a:1:{s:7:"onclick";s:337:"c("DISC")->font->color = 13091773;
+c("DISS")->font->color = 13091773;
+$self->font->color = 16777215;
+c("main->background")->center = true;
+c("main->background")->stretch = false;
+c("main->background")->proportional = true;
+ini::open( $progDir . "localStorage/data/desktop.ini" );
+ini::write("desktop", "imagePos", "proportional");";}s:7:"opendlg";N;s:10:"settingsni";N;s:15:"settingsnewtork";N;s:12:"panelnetwork";N;s:6:"label4";N;s:8:"adapters";a:1:{s:10:"ondblclick";s:337:"$get = shell_exec("ipconfig");
+$ethernet = iconv("CP866", "CP1251", $get);
+$adapters = explode("Ethernet adapter ", $ethernet);
+c("adapterInfo")->text = $adapters[ $self->itemIndex + 1 ];
+c("adapterInfo")->text = str_replace(". ", "", c("adapterInfo")->text);
+c("adapterInfo")->text = str_replace(" :", ":", c("adapterInfo")->text);";}s:14:"adaptersupdate";a:1:{s:7:"onclick";s:1114:"c("adapters")->text = "";
+$get = shell_exec("ipconfig");
+$ethernet = iconv("CP866", "CP1251", $get);
+$adapters = explode("Ethernet adapter ", $ethernet);
+$count = count( $adapters );
+for ( $add = 1; $add <= $count; $add++ ){
+    $adapter = explode(": ", $adapters[$add]);
+    $adapter = str_replace("   DNS-суффикс подключения . . . . . ", "", $adapter);
+    $adapter = str_replace("   Локальный IPv6-адрес канала . . . ", "", $adapter);
+    $adapter = str_replace("   IPv4-адрес. . . . . . . . . . . . ", "", $adapter);
+    $adapter = str_replace("   Маска подсети . . . . . . . . . . ", "", $adapter);
+    $adapter = str_replace("   Основной шлюз. . . . . . . . . ", "", $adapter);
+    $adapter = str_replace("   Состояние среды. . . . . . . . ", "", $adapter);
+    $adapter = str_replace("Среда передачи недоступна.", "", $adapter);
+    $adapter = str_replace("\n", "", $adapter);
+    c("adapters")->text .= $adapter[0];
+    c("adapters")->text = str_replace("   Состояние среды. . . . . . . . ", "", c("adapters")->text);
+    c("adapters")->text = str_replace(":", "", c("adapters")->text);
+}";}s:6:"label5";N;s:11:"adapterinfo";a:0:{}s:6:"label6";N;s:6:"shape8";N;s:9:"buttondcc";a:1:{s:7:"onclick";s:258:"if ( c("colorDlg")->execute() ){
+    c("main")->color = c("colorDlg")->color;
+    c("shapeDCC")->brushColor = c("colorDlg")->color;
+    ini::open( $progDir . "localStorage/data/desktop.ini" );
+    ini::write("desktop", "color", c("colorDlg")->color );
+}";}s:9:"colordlg\";N;s:8:"shapedcc";N;s:16:"panelofflinemode";N;s:18:"settingslockscreen";N;s:11:"settingslsi";N;s:10:"settingsnt";a:1:{s:7:"onclick";s:129:"global $offlineMode;
+if ( $offlineMode ){
+    c("panelOfflineMode")->toFront();
+} else {
+    c("panelNetwork")->toFront();
+}";}s:11:"settingslst";a:1:{s:7:"onclick";s:32:"c("panelLockScreen")->toFront();";}s:15:"panellockscreen";N;s:6:"label9";N;s:7:"label10";a:1:{s:7:"onclick";s:255:"if ( c("colorDlg")->execute() ){
+    c("LSColor")->brushColor = c("colorDlg")->color;
+    c("lockScreen")->color = c("colorDlg")->color;
+    ini::open("localStorage/data/lockScreen.ini");
+    ini::write("lockScreen", "color", c("colorDlg")->color);
+}";}s:7:"label11";N;s:7:"imagels";N;s:5:"lsinf";N;s:7:"label12";a:1:{s:7:"onclick";s:449:"if ( c("openDlg")->execute() ){
+    if ( c("LSINF")->visible ){
+        c("LSINF")->visible = false;
+        c("LSIDelete")->visible = true;
+    }
+    c("imageLS")->loadFromFile( c("openDlg")->fileName );
+    c("lockScreen->lsImage")->loadFromFile( c("openDlg")->fileName );
+    ini::open("localStorage/data/lockScreen.ini");
+    ini::write("lockScreen", "image", true);
+    ini::write("lockScreen", "imagePath", c("openDlg")->fileName);
+}";}s:7:"lscolor";N;s:9:"lsidevel\";a:1:{s:7:"onclick";s:337:"if ( c("openDlg")->execute() ){
+    if ( c("LSINF")->visible ){
+        c("LSINF")->visible = false;
+    }
+    c("imageLS")->loadFromFile( c("openDlg")->fileName );
+    ini::open("localStorage/data/lockScreen.ini");
+    ini::write("lockScreen", "image", true);
+    ini::write("lockScreen", "imagePath", c("openDlg")->fileName);
+}";}s:9:"lsidelete";a:1:{s:7:"onclick";s:221:"c("imageLS")->picture->clear();
+c("lockScreen->lsImage")->picture->clear();
+ini::open("localStorage/data/lockScreen.ini");
+ini::write("lockScreen", "image", false);
+c("LSINF")->visible = true;
+$self->visible = false;";}s:10:"settingsai";N;s:13:"settingsabout";N;s:10:"settingsat";a:1:{s:7:"onclick";s:27:"c("panelAbout")->toFront();";}s:10:"panelabout";N;s:9:"systemver";N;s:7:"label14";N;s:7:"label15";N;s:7:"label16";N;s:7:"label17";N;s:5:"link1";a:1:{s:11:"onmousedown";s:139:"global $offlineMode;
+if ( !$offlineMode ){
+    c("browser->chromium")->load("http://vk.com/oneric_ozelot");
+    c("browser")->show();
+}";}s:10:"settingsui";N;s:10:"settingsut";a:1:{s:7:"onclick";s:277:"global $offlineMode, $user;
+if ( $offlineMode ){
+    c("panelOfflineMode")->toFront();
+} else {
+    c("panelProfile")->toFront();
+    c("profileUserName")->caption = $user;
+    c("profileUserPic")->loadFromUrl("http://jointentrance.zz.vc/users/" . $user . "/pic.png");
+}";}s:12:"settingsuser";N;s:12:"panelprofile";N;s:15:"profileusername";N;s:14:"profileuserpic";a:1:{s:7:"onclick";s:141:"global $user;
+c("imageview->imageviewMain")->loadFromUrl("http://jointentrance.zz.vc/users/" . $user . "/pic.png");
+c("imageview")->show();";}s:14:"profileregdate";N;s:12:"profileemail";N;s:13:"settingsicons";N;s:10:"settingsii";N;s:10:"settingsit";a:1:{s:7:"onclick";s:27:"c("panelIcons")->toFront();";}s:10:"panelicons";N;s:7:"label19";a:0:{}s:10:"createicon";a:1:{s:7:"onclick";s:931:"global $currentIconImage;
+if ( !$currentIconImage ){
+    $currentIconImage = "localStorage/data/images/defaultIcon.png";
+}
+$icon = new UIIcon( c("main") );
+$icon->parent = c("main");
+$icon->w = 48;
+$icon->h = 48;
+$icon->x = $SCREEN->width / 2 - $icon->w / 2;
+$icon->y = $SCREEN->height / 2 - $icon->h / 2;
+$icon->loadFromFile( $currentIconImage );
+$icon->center = true;
+$icon->proportional = true;
+$icon->name = "icon" . c("createIconList")->items->count;
+$icon->create();
+ini::open("localStorage/data/iconsCreated.ini");
+ini::write("icon" . c("createIconList")->items->count, "x", $icon->x);
+ini::write("icon" . c("createIconList")->items->count, "y", $icon->y);
+ini::write("icon" . c("createIconList")->items->count, "image", $currentIconImage);
+ini::write("icon" . c("createIconList")->items->count, "event", c("createIconCMD")->text);
+c("createIconList")->text .= "icon" . c("createIconList")->items->count;";}s:15:"createiconimage";N;s:13:"createiconcmd";N;s:7:"label21";a:0:{}s:7:"label23";a:0:{}s:14:"createiconlist";N;s:12:"createiconic";a:1:{s:7:"onclick";s:177:"global $currentIconImage;
+if ( c("openDlg")->execute() ){
+    $currentIconImage = c("openDlg")->fileName;
+    c("createIconImage")->loadFromFile( c("openDlg")->fileName );
+}";}s:16:"createicondelete";a:1:{s:7:"onclick";s:404:"if ( c("createIconList")->items->selected ){
+    ini::open("localStorage/data/iconsCreated.ini");
+    ini::deleteSection( c("createIconList")->items->selected );
+    c("main->" . c("createIconList")->items->selected )->free();
+    $i = c("createIconList")->itemIndex;
+    $arr = explode(_BR_, c("createIconList")->text);
+    unset($arr[$i]);
+    c("createIconList")->text = implode(_BR_, $arr);
+}";}s:8:"aboutupd";a:1:{s:7:"onclick";s:524:"global $offlineMode;
+if ( $offlineMode ){
+    niShow($text = "Система запущена в режиме offline.\nПроверка обновлений недоступна.");
+} else {
+    if ( $self->caption == "Проверить обновления" ){
+        c("checkUpdText")->visible = true;
+        updCheck();
+    } else {
+        c("updater")->show();
+        c("updater->downloadUpd")->path = $progDir . "/";
+        c("updater->downloadUpd")->url = file_get_contents("http://ozscript.info/updater/link.ozd");
+        c("updater->downloadUpd")->start();
+    }
+}";}s:8:"updcheck";a:1:{s:9:"onexecute";s:374:"//err_no();
+if ( $build = file_get_contents("http://ozscript.info/updater/build.ozd") ){
+    if ( c("systemVer")->caption == $build ){
+        c("checkUpdText")->caption = "Обновлений не найдено";
+    } else {
+        c("checkUpdText")->caption = "Доступно обновление до версии " . $build;
+        c("aboutUpd")->caption = "Загрузить обновления";
+    }
+} else {
+
+}";}s:12:"checkupdtext";N;}s:7:"browser";a:12:{s:12:"browserclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:12:"browserframe";a:2:{s:11:"onmousedown";s:965:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+if ( $button ){
+    switch ( $GLOBALS["resize"][$appId]["R"] ){
+        case 0:
+            $GLOBALS["resize"][$appId]["PX"] = c( $appId )->x;
+            $GLOBALS["resize"][$appId]["PY"] = c( $appId )->y;
+            $GLOBALS["resize"][$appId]["R"] = 1;
+            resize::resize_object( c( $appId ), array("h" => $SCREEN->height, "w" => $SCREEN->width, "x" => 0, "y" => 0) );
+        break;
+        case 1:
+            resize::resize_object( c( $appId ), array("h" => $GLOBALS["resize"][$appId]["H"], "w" => $GLOBALS["resize"][$appId]["W"], "x" => $GLOBALS["resize"][$appId]["PX"], "y" => $GLOBALS["resize"][$appId]["PY"]) );
+            $GLOBALS["resize"][$appId]["R"] = 0;
+        break;
+    }
+} else {
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = c( $appId )->x;
+    $fy = c( $appId )->y;
+    c("main->appMove")->enable = true;
+}";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:6:"shape1";N;s:6:"shape2";N;s:10:"browserurl";a:1:{s:9:"onkeydown";s:69:"if ( $key == VK_RETURN ){
+    c("chromium")->load( $self->text );
+}";}s:8:"--fmedit";a:3:{s:6:"onshow";s:386:"global $appId, $homeUrl;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+$GLOBALS["resize"][$appId]["W"] = c( $appId )->w;
+$GLOBALS["resize"][$appId]["H"] = c( $appId )->h;
+if ( !$homeUrl ){
+    $homeUrl = true;
+    c("chromium")->load( c("browserUrl")->text );
+}
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";s:8:"oncreate";s:1126:"c("browserUrl")->text = str_replace("
+", "", c("browserUrl")->text);
+$self->doubleBuffered = true;
+
+/*
+$dirname = $progDir . "localStorage/ozBrowser/";
+// ??????? ? ?????????? ?????? ????? ??? ?????
+$size = dir_size($dirname);
+echo $formSize;
+
+// ??????? ??? ????????? ???? ????????
+// ? ???? ????????? ??????
+function dir_size($dirname) {
+  $totalsize = 0; // ????? ??????
+  // ????????? ?????
+  if ($dirstream = @opendir($dirname)) {
+    // ?????????? ??? ??? ????????? ?????? ?????
+      while(($filename = readdir($dirstream))!==false){
+        if ($filename != "." && $filename != ".."){
+        // ???? ??????? ????
+        if (is_file($dirname . "/" . $filename)){
+          $totalsize += filesize($dirname . "/" . $filename);
+        }
+        // ???? ???????? ?????
+        if(is_dir($dirname . "/" . $filename)){
+          $totalsize += dir_size($dirname . "/" . $filename);
+        }
+       }
+     }
+  }
+  // ????????? ?????
+  closedir($dirstream);
+  // ?????????? ?????????
+  c("cacheSize")->caption = "Размер кеша: " . number_format( ($totalsize / 1024) / 1024, 2) . " MB";
+}
+*/";}s:8:"chromium";a:5:{s:17:"onchromiumlibload";s:535:"/*
+$cachePath = DOC_ROOT . 'localStorage/ozBrowser/';
+$userAgent = 'ozBrowser 1.0';
+$version   = '1.0';
+$locale    = '';
+$logFile   = '';
+$extraPluginPath = '';
+$localeStorageQuote = 5 * 1024 * 1024;
+$sessionStorageQuota = 0;
+$jsFlags = 0;
+$autoDetectProxy = true;
+
+chromium_settings(
+        $cachePath,
+        $userAgent,
+        $version,
+        $locale,
+        $logFile,
+        $extraPluginPath,
+        $localeStorageQuote,
+        $sessionStorageQuota,
+        $jsFlags,
+        $autoDetectProxy
+);
+*/";s:15:"onaddresschange";s:29:"c("browserUrl")->text = $url;";s:20:"ongetdownloadhandler";s:241:"/*
+global $dwnRename, $dwnFile;
+niShow($text = "Загрузка файла " . $fileName);
+c("downloadFile")->url = $url;
+$dwnRename = basename( $url );
+$dwnFile = $fileName;
+c("downloadFile")->path = "downloads/";
+c("downloadFile")->start();
+*/";s:13:"ontitlechange";s:58:"c("browserTltle")->caption = "ozBrowser [" . $title . "]";";s:13:"onbeforepopup";s:20:"$self->load( $url );";}s:11:"browserback";a:1:{s:7:"onclick";s:24:"c("chromium")->goBack();";}s:14:"browserforward";a:1:{s:7:"onclick";s:27:"c("chromium")->goForward();";}s:6:"shape4";N;s:12:"downloadfile";a:1:{s:10:"oncomplete";s:141:"global $dwnRename, $dwnFile;
+file_rename("downloads/" . $dwnRename, "downloads/" . $dwnFile );
+niShow($text = "Загрузка файла завершена.");";}s:12:"browsertltle";N;}s:7:"notepad";a:25:{s:6:"label1";N;s:12:"notepadframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:12:"notepadclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:11:"notepadcore";a:1:{s:8:"onchange";s:66:"global $notepadNew;
+if ( !$notepadNew ){
+    $notepadNew = 1;
+}";}s:6:"shape3";N;s:6:"shape1";a:0:{}s:6:"nppath";N;s:6:"image1";a:1:{s:7:"onclick";s:57:"resize::resize_object( c("panelNS"), array("h" => 152) );";}s:7:"panelns";N;s:8:"--fmedit";a:2:{s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:6:"shape4";N;s:6:"shape6";N;s:6:"label3";a:1:{s:7:"onclick";s:122:"global $noteOpen;
+if ( c("openDlgNote")->execute() ){
+    $noteOpen = c("openDlgNote")->fileName;
+    notepadOpen();
+}";}s:6:"label4";a:1:{s:7:"onclick";s:526:"global $notepadNew, $notepadNewType, $noteSave, $notePath;
+if ( c("saveDlgNote")->execute() ){
+    if ( $notePath ){
+        file_put_contents( $notePath, c("notepadCore")->text );
+        resize::resize_object( c("panelNS"), array("h" => 0) );
+    } else {
+        $noteSave = c("saveDlgNote")->fileName;
+        $notePath = $noteSave;
+        c("npPath")->caption = $notePath;
+        file_put_contents( $notePath, c("notepadCore")->text );
+        resize::resize_object( c("panelNS"), array("h" => 0) );
+    }
+}";}s:6:"shape7";N;s:6:"image2";a:1:{s:7:"onclick";s:55:"resize::resize_object( c("panelNS"), array("h" => 0) );";}s:6:"label2";a:1:{s:7:"onclick";s:466:"global $notepadNew, $notepadNewType;
+if ( $notepadNew ){
+    c("notepadWarn")->caption = "Имеются несохраненные изменения.\nНачать новый проект?";
+    $notepadNewType = "new";
+    c("shapeY")->visible = true;
+    c("shapeN")->visible = true;
+    c("labelY")->visible = true;
+    c("labelN")->visible = true;
+} else {
+    c("notepadCore")->text = "";
+    c("npPath")->caption = "Новый проект";
+    resize::resize_object( c("panelNS"), array("h" => 0) );
+}";}s:11:"notepadwarn";N;s:6:"shapey";N;s:6:"shapen";N;s:6:"labely";a:1:{s:7:"onclick";s:1027:"global $notepadNew, $notepadNewType, $noteOpen, $noteSave, $notePath;
+switch ( $notepadNewType ){
+    case "new":
+        c("notepadCore")->text = "";
+        c("npPath")->caption = "Новый проект";
+        $notepadNewType = false;
+        $notepadNew = false;
+        c("notepadWarn")->caption = "";
+        c("shapeY")->visible = false;
+        c("shapeN")->visible = false;
+        c("labelN")->visible = false;
+        $self->visible = false;
+        resize::resize_object( c("panelNS"), array("h" => 0) );
+    break;
+    case "open":
+        c("notepadCore")->text = file_get_contents( $noteOpen );
+        $notePath = $noteOpen;
+        c("npPath")->caption = $notePath;
+        $notepadNewType = false;
+        $notepadNew = false;
+        c("notepadWarn")->caption = "";
+        c("shapeY")->visible = false;
+        c("shapeN")->visible = false;
+        c("labelN")->visible = false;
+        $self->visible = false;
+        resize::resize_object( c("panelNS"), array("h" => 0) );
+    break;
+}";}s:6:"labeln";a:1:{s:7:"onclick";s:200:"global $notepadNewType;
+$notepadNewType = false;
+c("notepadWarn")->caption = "";
+c("shapeY")->visible = false;
+c("shapeN")->visible = false;
+c("labelY")->visible = false;
+$self->visible = false;";}s:11:"savedlgnote";N;s:11:"opendlgnote";N;s:11:"notepadopen";a:1:{s:9:"onexecute";s:1009:"global $notepadNew, $notepadNewType, $noteOpen;
+    resize::resize_object( c("notepad->panelNS"), array("h" => 152) );
+    if ( $notepadNew ){
+        c("notepadWarn")->caption = "Имеются несохраненные изменения.\nПродолжить?";
+        $notepadNewType = "open";
+        c("shapeY")->visible = true;
+        c("shapeN")->visible = true;
+        c("labelY")->visible = true;
+        c("labelN")->visible = true;
+    } else {
+        c("notepadCore")->text = file_get_contents( $noteOpen );
+        resize::resize_object( c("panelNS"), array("h" => 0) );
+    }
+
+
+
+
+/*
+global $notepadNew, $notepadNewType;
+if ( $notepadNew ){
+    c("notepadWarn")->caption = "Имеются несохраненные изменения.\nНачать новый проект?";
+    $notepadNewType = "new";
+    c("shapeY")->visible = true;
+    c("shapeN")->visible = true;
+    c("labelY")->visible = true;
+    c("labelN")->visible = true;
+} else {
+    c("notepadCore")->text = "";
+    resize::resize_object( c("panelNS"), array("h" => 0) );
+}
+*/";}}s:10:"lockscreen";a:4:{s:7:"lsimage";a:1:{s:7:"onclick";s:58:"resize::resize_object( c("lockScreen"), array("h" => 0) );";}s:6:"lstime";N;s:8:"lsmounth";N;s:8:"--fmedit";a:2:{s:8:"oncreate";s:1197:"switch ( Date("l") ){
+    case "Monday":
+        $day = "Понедельник";
+    break;
+    case "Tuesday":
+        $day = "Вторник";
+    break;
+    case "Wednesday":
+        $day = "Среда";
+    break;
+    case "Thursday":
+        $day = "Четверг";
+    break;
+    case "Friday":
+        $day = "Пятница";
+    break;
+    case "Saturday":
+        $day = "Суббота";
+    break;
+    case "Sunday":
+        $day = "Воскресенье";
+    break;
+}
+switch ( Date("M") ){
+    case "Jan":
+        $mon = "Январь";
+    break;
+    case "Feb":
+        $mon = "Февраль";
+    break;
+    case "Mar":
+        $mon = "Март";
+    break;
+    case "Apr":
+        $mon = "Апрель";
+    break;
+    case "May":
+        $mon = "Май";
+    break;
+    case "Jun":
+        $mon = "Июнь";
+    break;
+    case "Jul":
+        $mon = "Июль";
+    break;
+    case "Aug":
+        $mon = "Август";
+    break;
+    case "Sep":
+        $mon = "Сентябрь";
+    break;
+    case "Oct":
+        $mon = "Октябрь";
+    break;
+    case "Nov":
+        $mon = "Ноябрь";
+    break;
+    case "Dec":
+        $mon = "Декабрь";
+    break;
+}
+c("lsMounth")->caption = $mon . " " . Date("d") . ", " . $day;";s:12:"onclosequery";s:18:"$canClose = false;";}}s:10:"notifiinfo";a:8:{s:8:"--fmedit";a:1:{s:12:"onclosequery";s:18:"$canClose = false;";}s:6:"niwait";a:1:{s:7:"ontimer";s:51:"c("niHide")->enable = true;
+$self->enable = false;";}s:6:"nihide";a:1:{s:7:"ontimer";s:191:"c("notifiInfo")->alphaBlendValue -= 5;
+if ( c("notifiInfo")->alphaBlendValue <= 0 ){
+    $self->enable = false;
+    c("notifiInfo")->hide();
+    c("notifiInfo")->alphaBlendValue = 255;
+}";}s:6:"nitext";N;s:7:"nitwait";a:1:{s:7:"ontimer";s:54:"t::c("niHide")->enable = true;
+$self->enable = false;";}s:7:"nithide";a:1:{s:7:"ontimer";s:203:"t::c("notifiInfo")->alphaBlendValue -= 5;
+if ( t::c("notifiInfo")->alphaBlendValue <= 0 ){
+    $self->enable = false;
+    t::c("notifiInfo")->hide();
+    t::c("notifiInfo")->alphaBlendValue = 255;
+}";}s:7:"nitshow";a:1:{s:7:"ontimer";s:161:"t::c("notifiInfo")->alphaBlendValue += 5;
+if ( t::c("notifiInfo")->alphaBlendValue >= 255 ){
+    t::c("niTWait")->enable = true;
+    $self->enable = false;
+}";}s:6:"nishow";a:1:{s:7:"ontimer";s:151:"c("notifiInfo")->alphaBlendValue += 5;
+if ( c("notifiInfo")->alphaBlendValue >= 255 ){
+    c("niWait")->enable = true;
+    $self->enable = false;
+}";}}s:9:"imageview";a:5:{s:6:"label1";N;s:14:"imageviewframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:14:"imageviewclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:8:"--fmedit";a:2:{s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:13:"imageviewmain";N;}s:11:"desktopmenu";a:9:{s:12:"dmcreateicon";a:1:{s:7:"onclick";s:183:"global $showMenu;
+c("settings")->show();
+c("settings->panelIcons")->toFront();
+resize::resize_object( c("desktopMenu"), array("x" => 0 - c("desktopMenu")->w) );
+$showMenu = false;";}s:6:"image2";N;s:8:"--fmedit";a:0:{}s:17:"dmwallpaperchange";a:1:{s:7:"onclick";s:430:"global $showMenu;
+if ( c("openDlg")->execute() ){
+    c("settings->desktopImage")->loadFromFile( c("openDlg")->fileName );
+    c("main->background")->loadFromFile( c("openDlg")->fileName );
+    ini::open( $progDir . "localStorage/data/desktop.ini" );
+    ini::write("desktop", "image", c("openDlg")->fileName );
+    resize::resize_object( c("desktopMenu"), array("x" => 0 - c("desktopMenu")->w) );
+    $showMenu = false;
+}";}s:7:"opendlg";N;s:6:"image3";N;s:10:"scrkeyshow";a:1:{s:7:"onclick";s:395:"global $showMenu;
+c("screenKeyboard")->show();
+c("screenKeyboard")->y = $SCREEN->height;
+c("screenKeyboard")->x = $SCREEN->width / 2 - c("screenKeyboard")->w / 2;
+resize::resize_object( c("screenKeyboard"), array("y" => $SCREEN->height - c("screenKeyboard")->h - c("main->taskbar")->h) );
+resize::resize_object( c("desktopMenu"), array("x" => 0 - c("desktopMenu")->w) );
+$showMenu = false;";}s:6:"image4";N;s:9:"menushare";a:1:{s:7:"onclick";s:329:"global $showMenu, $showShare;
+c("shareSel")->show();
+c("shareSel")->x = $SCREEN->width;
+c("shareSel")->y = 8;
+resize::resize_object( c("shareSel"), array("x" => $SCREEN->width - c("shareSel")->w - 8) );
+resize::resize_object( c("desktopMenu"), array("x" => 0 - c("desktopMenu")->w) );
+$showMenu = false;
+$showShare = true;";}}s:4:"chat";a:11:{s:6:"label1";N;s:9:"chatclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:9:"chatframe";a:2:{s:11:"onmousedown";s:965:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+if ( $button ){
+    switch ( $GLOBALS["resize"][$appId]["R"] ){
+        case 0:
+            $GLOBALS["resize"][$appId]["PX"] = c( $appId )->x;
+            $GLOBALS["resize"][$appId]["PY"] = c( $appId )->y;
+            $GLOBALS["resize"][$appId]["R"] = 1;
+            resize::resize_object( c( $appId ), array("h" => $SCREEN->height, "w" => $SCREEN->width, "x" => 0, "y" => 0) );
+        break;
+        case 1:
+            resize::resize_object( c( $appId ), array("h" => $GLOBALS["resize"][$appId]["H"], "w" => $GLOBALS["resize"][$appId]["W"], "x" => $GLOBALS["resize"][$appId]["PX"], "y" => $GLOBALS["resize"][$appId]["PY"]) );
+            $GLOBALS["resize"][$appId]["R"] = 0;
+        break;
+    }
+} else {
+    $sx = cursor_pos_x();
+    $sy = cursor_pos_y();
+    $fx = c( $appId )->x;
+    $fy = c( $appId )->y;
+    c("main->appMove")->enable = true;
+}";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:8:"--fmedit";a:3:{s:6:"onshow";s:271:"global $appId, $chatServer;
+$chatServer = "Room_1";
+$appId = $self->name;
+c("main->appShow")->enable = true;
+msgGet( $chatServer );
+c("loadMsg")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";s:8:"oncreate";s:237:"global $appId;
+$appId = $self->name;
+$GLOBALS["resize"][$appId]["W"] = c( $appId )->w;
+$GLOBALS["resize"][$appId]["H"] = c( $appId )->h;
+c("msgText")->text = str_replace("
+", "", c("msgText")->text);
+$self->doubleBuffered = true;
+";}s:7:"msgtext";a:1:{s:9:"onkeydown";s:277:"global $user, $chatServer;
+if ( $key == 13 ){
+    msgSend( $user, str_replace(" ", "_", $self->text), crypt( Date("i"), "F9B2FA71B63DAC54F851C01C0F32FA09" ), $chatServer );
+    c("msgList")->text = "Обновление...";
+    c("loadMsg")->enable = true;
+    $self->text = "";
+}";}s:7:"msgsend";a:1:{s:9:"onexecute";s:784:"global $chatServer;
+$chatServer = "Room_1";
+file_delete("localStorage/data/temp/messages.ozd");
+$send = file_get_contents("http://ozscript.info/chat/write.php?user=" . $user . "&message=" . $msg . "&server=" . $chatServer . "&session=" . $session);
+if ( $send == "InvalidSession" ){
+    t::c("notifiInfo")->alphaBlendValue = 0;
+    t::c("notifiInfo")->show();
+    t::c("notifiInfo")->x = t::c("main->notifiPlayerSP")->x;
+    t::c("notifiInfo")->y = t::c("main->notifiPlayerSP")->y;
+    t::c("notifiInfo->niText")->caption = "Произошла ошибка при отправке.\nПовторите попытку.";
+    t::c("notifiInfo->niTShow")->enable = true;
+} else {
+    file_put_contents("localStorage/data/temp/messages.ozd", file_get_contents("http://ozscript.info/chat/" . $chatServer . ".ozd") );
+}";}s:7:"msglist";N;s:6:"lload\";N;s:7:"loadmsg";a:1:{s:7:"ontimer";s:161:"if ( file_exists("localStorage/data/temp/messages.ozd") ){
+    c("msgList")->loadFromFile("localStorage/data/temp/messages.ozd");
+    $self->enable = false;
+}";}s:6:"msgget";a:1:{s:9:"onexecute";s:183:"file_delete("localStorage/data/temp/messages.ozd");
+file_put_contents("localStorage/data/temp/messages.ozd", file_get_contents("http://ozscript.info/chat/" . $chatServer . ".ozd") );";}s:12:"msgbuttonupd";a:1:{s:7:"onclick";s:112:"global $chatServer;
+msgGet( $chatServer );
+c("msgList")->text = "Обновление...";
+c("loadMsg")->enable = true;";}}s:5:"piano";a:28:{s:2:"c4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:8:"--fmedit";a:3:{s:8:"oncreate";s:0:"";s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:2:"d4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"e4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"f4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"g4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"a4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"b4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"cb4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"db4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"fb4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"gb4";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"ab4";a:1:{s:11:"onmousedown";s:0:"";}s:2:"c5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"d5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"e5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"f5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"g5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"a5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:2:"b5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"cb5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"db5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"fb5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"gb5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:3:"ab5";a:1:{s:11:"onmousedown";s:181:"if ( BASS::load("bass.dll") ){
+    $sample = BASS::StreamCreateFile(false, "localStorage/data/sounds/piano/" . $self->name . ".wav", 0, 0, 0);
+    BASS::ChannelPlay( $sample );
+}";}s:6:"label1";N;s:10:"pianoclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:10:"pianoframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}}s:14:"screenkeyboard";a:55:{s:6:"label1";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:10:"scrkeytext";N;s:7:"backspc";a:1:{s:11:"onmousedown";s:101:"if ( c("scrKeyText")->text ){
+    c("scrKeyText")->text = substr( c("scrKeyText")->text, 0, -1 );
+}";}s:8:"--fmedit";a:0:{}s:6:"label2";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:6:"label3";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:6:"label4";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:6:"label5";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:6:"label6";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:6:"label7";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:6:"label8";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:6:"label9";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label10";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label11";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label12";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label13";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label14";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label15";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label16";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label17";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label18";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label19";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label20";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label21";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label22";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label23";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label24";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label25";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label26";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label27";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label28";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label29";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label30";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label31";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label32";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label33";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label34";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label35";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label36";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label37";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label38";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label39";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label40";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label41";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label42";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label43";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label44";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label45";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:7:"label46";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:5:"space";a:1:{s:7:"onclick";s:63:"c("scrKeyText")->text = c("scrKeyText")->text . $self->caption;";}s:5:"shift";a:1:{s:11:"onmousedown";s:294:"switch ( $self->color ){
+    case 4144697:
+        $self->color = clWhite;
+        $self->font->color = 4144697;
+        shiftSwitch( true );
+    break;
+    case clWhite:
+        $self->color = 4144697;
+        $self->font->color = clWhite;
+        shiftSwitch( false );
+    break;
+}";}s:10:"scrkeylang";a:1:{s:11:"onmousedown";s:216:"switch  ( $self->caption ){
+    case "ENG":
+        $self->caption = "RUS";
+        shiftSwitch( false );
+    break;
+    case "RUS":
+        $self->caption = "ENG";
+        shiftSwitch( false );
+    break;
+}";}s:7:"label47";a:1:{s:11:"onmousedown";s:43:"clipboard_setText( c("scrKeyText")->text );";}s:11:"shiftswitch";a:1:{s:9:"onexecute";s:7133:"if ( $shift ){
+    if ( c("scrKeyLang")->caption == "ENG" ){
+        c("label1")->caption = "!";
+        c("label2")->caption = "@";
+        c("label3")->caption = "#";
+        c("label4")->caption = "$";
+        c("label5")->caption = "%";
+        c("label6")->caption = "^";
+        c("label7")->caption = "&";
+        c("label8")->caption = "*";
+        c("label9")->caption = "(";
+        c("label10")->caption = ")";
+        c("label11")->caption = "_";
+        c("label12")->caption = "+";
+        c("label13")->caption = "|";
+        c("label14")->caption = "Q";
+        c("label15")->caption = "W";
+        c("label16")->caption = "E";
+        c("label17")->caption = "R";
+        c("label18")->caption = "T";
+        c("label19")->caption = "Y";
+        c("label20")->caption = "U";
+        c("label21")->caption = "I";
+        c("label22")->caption = "O";
+        c("label23")->caption = "P";
+        c("label24")->caption = "{";
+        c("label25")->caption = "}";
+        c("label26")->caption = "A";
+        c("label27")->caption = "S";
+        c("label28")->caption = "D";
+        c("label29")->caption = "F";
+        c("label30")->caption = "G";
+        c("label31")->caption = "H";
+        c("label32")->caption = "J";
+        c("label33")->caption = "K";
+        c("label34")->caption = "L";
+        c("label35")->caption = ":";
+        c("label36")->caption = '"';
+        c("label37")->caption = "Z";
+        c("label38")->caption = "X";
+        c("label39")->caption = "C";
+        c("label40")->caption = "V";
+        c("label41")->caption = "B";
+        c("label42")->caption = "N";
+        c("label43")->caption = "M";
+        c("label44")->caption = "<";
+        c("label45")->caption = ">";
+        c("label46")->caption = "?";
+    } else {
+        c("label1")->caption = "!";
+        c("label2")->caption = "@";
+        c("label3")->caption = "#";
+        c("label4")->caption = "$";
+        c("label5")->caption = "%";
+        c("label6")->caption = "^";
+        c("label7")->caption = "&";
+        c("label8")->caption = "*";
+        c("label9")->caption = "(";
+        c("label10")->caption = ")";
+        c("label11")->caption = "_";
+        c("label12")->caption = "+";
+        c("label13")->caption = "|";
+        c("label14")->caption = "Й";
+        c("label15")->caption = "Ц";
+        c("label16")->caption = "У";
+        c("label17")->caption = "К";
+        c("label18")->caption = "Е";
+        c("label19")->caption = "Н";
+        c("label20")->caption = "Г";
+        c("label21")->caption = "Ш";
+        c("label22")->caption = "Щ";
+        c("label23")->caption = "З";
+        c("label24")->caption = "Х";
+        c("label25")->caption = "Ъ";
+        c("label26")->caption = "Ф";
+        c("label27")->caption = "Ы";
+        c("label28")->caption = "В";
+        c("label29")->caption = "А";
+        c("label30")->caption = "П";
+        c("label31")->caption = "Р";
+        c("label32")->caption = "О";
+        c("label33")->caption = "Л";
+        c("label34")->caption = "Д";
+        c("label35")->caption = "Ж";
+        c("label36")->caption = "Э";
+        c("label37")->caption = "Я";
+        c("label38")->caption = "Ч";
+        c("label39")->caption = "С";
+        c("label40")->caption = "М";
+        c("label41")->caption = "И";
+        c("label42")->caption = "Т";
+        c("label43")->caption = "Ь";
+        c("label44")->caption = "Б";
+        c("label45")->caption = "Ю";
+        c("label46")->caption = "?";
+    }
+} else {
+    if ( c("scrKeyLang")->caption == "ENG" ){
+        c("label1")->caption = "1";
+        c("label2")->caption = "2";
+        c("label3")->caption = "3";
+        c("label4")->caption = "4";
+        c("label5")->caption = "5";
+        c("label6")->caption = "6";
+        c("label7")->caption = "7";
+        c("label8")->caption = "8";
+        c("label9")->caption = "9";
+        c("label10")->caption = "0";
+        c("label11")->caption = "-";
+        c("label12")->caption = "=";
+        c("label13")->caption = chr ( 92 );
+        c("label14")->caption = "q";
+        c("label15")->caption = "w";
+        c("label16")->caption = "e";
+        c("label17")->caption = "r";
+        c("label18")->caption = "t";
+        c("label19")->caption = "y";
+        c("label20")->caption = "u";
+        c("label21")->caption = "i";
+        c("label22")->caption = "o";
+        c("label23")->caption = "p";
+        c("label24")->caption = "[";
+        c("label25")->caption = "]";
+        c("label26")->caption = "a";
+        c("label27")->caption = "s";
+        c("label28")->caption = "d";
+        c("label29")->caption = "f";
+        c("label30")->caption = "g";
+        c("label31")->caption = "h";
+        c("label32")->caption = "j";
+        c("label33")->caption = "k";
+        c("label34")->caption = "l";
+        c("label35")->caption = ";";
+        c("label36")->caption = '"';
+        c("label37")->caption = "z";
+        c("label38")->caption = "x";
+        c("label39")->caption = "c";
+        c("label40")->caption = "v";
+        c("label41")->caption = "b";
+        c("label42")->caption = "n";
+        c("label43")->caption = "m";
+        c("label44")->caption = ",";
+        c("label45")->caption = ".";
+        c("label46")->caption = "/";
+    } else {
+        c("label1")->caption = "1";
+        c("label2")->caption = "2";
+        c("label3")->caption = "3";
+        c("label4")->caption = "4";
+        c("label5")->caption = "5";
+        c("label6")->caption = "6";
+        c("label7")->caption = "7";
+        c("label8")->caption = "8";
+        c("label9")->caption = "9";
+        c("label10")->caption = "0";
+        c("label11")->caption = "-";
+        c("label12")->caption = "=";
+        c("label13")->caption = chr ( 92 );
+        c("label14")->caption = "й";
+        c("label15")->caption = "ц";
+        c("label16")->caption = "у";
+        c("label17")->caption = "к";
+        c("label18")->caption = "е";
+        c("label19")->caption = "н";
+        c("label20")->caption = "г";
+        c("label21")->caption = "ш";
+        c("label22")->caption = "щ";
+        c("label23")->caption = "з";
+        c("label24")->caption = "х";
+        c("label25")->caption = "ъ";
+        c("label26")->caption = "ф";
+        c("label27")->caption = "ы";
+        c("label28")->caption = "в";
+        c("label29")->caption = "а";
+        c("label30")->caption = "п";
+        c("label31")->caption = "р";
+        c("label32")->caption = "о";
+        c("label33")->caption = "л";
+        c("label34")->caption = "д";
+        c("label35")->caption = "ж";
+        c("label36")->caption = "э";
+        c("label37")->caption = "я";
+        c("label38")->caption = "ч";
+        c("label39")->caption = "с";
+        c("label40")->caption = "м";
+        c("label41")->caption = "и";
+        c("label42")->caption = "т";
+        c("label43")->caption = "ь";
+        c("label44")->caption = "б";
+        c("label45")->caption = "ю";
+        c("label46")->caption = "/";
+    }
+}";}s:10:"scrkeyhide";a:1:{s:11:"onmousedown";s:75:"resize::resize_object( c("screenKeyboard"), array("y" => $SCREEN->width) );";}}s:7:"apptovm";a:7:{s:6:"label1";N;s:12:"apptovmframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:12:"apptovmclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:8:"--fmedit";a:2:{s:6:"onshow";s:519:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+/*
+shell_exec("cd " . $progDir . "localStorage & getWindows.exe");
+foreach ( file("localStorage/handles.ozd") as $app ){
+    $app = explode("_", $app);
+    if ( $app[1] != "
+" ){
+        c("winAppsList")->text .= "[" . substr($app[0], 2, strlen($app[0]) ) . "]    " . $app[1];
+    }
+}
+file_delete("localStorage/handles.ozd");
+*/
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:11:"winappslist";a:1:{s:10:"ondblclick";s:337:"if ( $self->items->selected ){
+    $app = explode("    ", $self->items->selected);
+    $FFI = new ffi("
+    [lib='User32.dll']
+    int SetParent( int hWndPopup, int hWndNewParent );
+    int FindWindowA (char *lpClassName, char *lpWindowName );
+    ");
+    $FFI->SetParent( $FFI->FindWindowA(NULL, $app[1]), c("main")->handle );
+}";}s:8:"happtooz";a:1:{s:7:"onclick";s:359:"if ( c("winAppsList")->items->selected ){
+    $app = explode("    ", c("winAppsList")->items->selected);
+    $FFI = new ffi("
+    [lib='User32.dll']
+    int SetParent( int hWndPopup, int hWndNewParent );
+    int FindWindowA (char *lpClassName, char *lpWindowName );
+    ");
+    $FFI->SetParent( $FFI->FindWindowA(NULL, $app[1]), c("main")->handle );
+}";}s:7:"happupd";a:1:{s:7:"onclick";s:405:"c("winAppsList")->text = "Обновление...";
+shell_exec("cd " . $progDir . "localStorage & getWindows.exe");
+c("winAppsList")->text = null;
+foreach ( file("localStorage/handles.ozd") as $app ){
+    $app = explode("_", $app);
+    if ( $app[1] != "
+" ){
+        c("winAppsList")->text .= "[" . substr($app[0], 2, strlen($app[0]) ) . "]    " . $app[1];
+    }
+}
+file_delete("localStorage/handles.ozd");";}}s:8:"sharesel";a:4:{s:6:"label1";N;s:6:"image2";N;s:7:"scrshot";a:1:{s:7:"onclick";s:540:"global $showMenu, $showShare;
+c("shareSel")->hide();
+c("main")->repaint();
+$im = imagegrabscreen();
+ob_start();
+imagejpeg($im);
+$data = ob_get_contents();
+ob_end_clean();
+imagedestroy($im);
+$timage = new TImage;
+$timage->create;
+$timage->picture->loadFromStr( $data, "jpg" );
+$timage->saveToFile("localStorage/screenshot " . date("d_m_y") . " " . date("H_i_s") . ".jpg");
+$timage->free();
+niShow("Скриншот сохранен в файл:\nscreenshot " . date("d_m_y") . " " . date("H_i_s") . ".jpg");
+$showMenu = false;
+$showShare = false;";}s:7:"webshot";a:1:{s:7:"onclick";s:137:"global $showShare;
+c("shareWebScr")->show();
+resize::resize_object( c("shareSel"), array("x" => $SCREEN->width) );
+$showShare = false;";}}s:11:"sharewebscr";a:8:{s:6:"label1";N;s:16:"sharewebscrclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:16:"sharewebscrframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:6:"shape3";N;s:12:"webcamscreen";N;s:8:"--fmedit";a:3:{s:8:"oncreate";s:0:"";s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:6:"label2";a:1:{s:7:"onclick";s:291:"$save = new TControlCanvas( c("shareWebScr") );
+$save->parent = c("webcamScreen")->handle;
+$save->savePicture("localStorage/webcam " . date("d_m_y") . " " . date("H_i_s") . ".jpg");
+$save->free();
+niShow("Снимок сохранен в файл:\nwebcam " . date("d_m_y") . " " . date("H_i_s") . ".jpg");";}s:9:"webdevice";a:1:{s:10:"ondblclick";s:64:"InitializeCam( c("webcamScreen")->handle, $self->itemIndex + 1);";}}s:13:"startaddpanel";a:7:{s:6:"label1";N;s:18:"startaddpanelframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:18:"startaddpanelclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:8:"--fmedit";a:3:{s:6:"onshow";s:88:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";s:8:"oncreate";s:73:"c("userPanelCmd")->text = str_replace("
+", "", c("userPanelCmd")->text);";}s:7:"shape17";N;s:12:"userpanelcmd";N;s:12:"userpanelset";a:1:{s:11:"onmousedown";s:1534:"global $currentPanel;
+ini::open("localStorage/data/panels.ini");
+ini::write($currentPanel, "event", c("userPanelCmd")->text);
+
+                $event = explode("::", c("userPanelCmd")->text);
+                if ( $event[1] ){
+                    switch ( $event[0] ){
+                        case "run":
+                            c("start->" . $currentPanel)->loadFromFile("localStorage/data/images/upFile.png");
+                            $GLOBALS["userPanels"][$currentPanel] = $event;
+                        break;
+                        case "notifiShow":
+                            c("start->" . $currentPanel)->loadFromFile("localStorage/data/images/notification.png");
+                            $GLOBALS["userPanels"][$currentPanel] = $event;
+                        break;
+                        default:
+ 							$GLOBALS["userPanels"][$currentPanel] = "err";
+                        break;
+                    }
+                }
+
+/*
+$event = explode("::", c("userPanelCmd")->text);
+if ( $event[0] ){
+    switch ( $event[0] ){
+        case "run":
+            run( $event[1], false );
+        break;
+        case "notifiShow":
+            niShow( $event[1] );
+        break;
+        default:
+            if ( file_exists( $event[0] ) ){
+                run( $event[0], false );
+            } else {
+                niShow("Ошибка в синтаксисе команды.\nУказано неверное действие.");
+            }
+        break;
+    }
+} else {
+    niShow("Ошибка в синтаксисе команды.");
+}
+*/";}}s:10:"calculator";a:21:{s:6:"label1";N;s:15:"calculatorframe";a:2:{s:11:"onmousedown";s:220:"global $sx, $sy, $fx, $fy, $appId;
+$arr = explode("Frame", $self->name);
+$appId = $arr[0];
+$sx = cursor_pos_x();
+$sy = cursor_pos_y();
+$fx = c( $appId )->x;
+$fy = c( $appId )->y;
+c("main->appMove")->enable = true;";s:9:"onmouseup";s:35:"c("main->appMove")->enable = false;";}s:15:"calculatorclose";a:1:{s:7:"onclick";s:108:"global $appId;
+$arr = explode("Close", $self->name);
+$appId = $arr[0];
+c("main->appHide")->enable = true;";}s:6:"value1";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:8:"maintext";N;s:6:"value2";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:7:"valuel4";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:6:"value3";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:6:"value5";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:6:"value6";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:6:"value7";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:6:"value8";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:6:"value9";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:6:"value0";a:1:{s:11:"onmousedown";s:59:"c("mainText")->text = c("mainText")->text . $self->caption;";}s:8:"--fmedit";a:3:{s:8:"oncreate";s:67:"c("mainText")->text = str_replace("
+", null, c("mainText")->text);";s:6:"onshow";s:179:"global $appId;
+$appId = $self->name;
+c("main->appShow")->enable = true;
+file_p_contents("$progDir/localStorage/data/appsStarted/$self->name.ozd", $self->handle);
+appsUpdate();";s:12:"onclosequery";s:139:"global $appId;
+$canClose = false;
+$appId = $self->name;
+if ( $self->alphaBlendValue == 255 ){
+    c("main->appHide")->enable = true;
+}";}s:6:"opplus";a:1:{s:11:"onmousedown";s:141:"global $operation;
+if ( !$operation ){
+    c("mainText")->text = c("mainText")->text . $self->caption;
+    $operation = $self->caption;
+}";}s:5:"opmin";a:1:{s:11:"onmousedown";s:141:"global $operation;
+if ( !$operation ){
+    c("mainText")->text = c("mainText")->text . $self->caption;
+    $operation = $self->caption;
+}";}s:5:"opdel";a:1:{s:11:"onmousedown";s:141:"global $operation;
+if ( !$operation ){
+    c("mainText")->text = c("mainText")->text . $self->caption;
+    $operation = $self->caption;
+}";}s:4:"opum";a:1:{s:11:"onmousedown";s:141:"global $operation;
+if ( !$operation ){
+    c("mainText")->text = c("mainText")->text . $self->caption;
+    $operation = $self->caption;
+}";}s:5:"clear";a:1:{s:11:"onmousedown";s:27:"c("mainText")->text = null;";}s:7:"opfinal";a:1:{s:11:"onmousedown";s:529:"global $operation;
+if ( $operation ){
+    $value = explode($operation, c("mainText")->text);
+    switch ( $operation ){
+        case "+":
+            c("mainText")->text = $value[0] + $value[1];
+        break;
+        case "-":
+            c("mainText")->text = $value[0] - $value[1];
+        break;
+        case "*":
+            c("mainText")->text = $value[0] * $value[1];
+        break;
+        case "/":
+            c("mainText")->text = $value[0] / $value[1];
+        break;
+    }
+    $operation = false;
+}";}}s:10:"appssystem";a:5:{s:6:"shape1";a:0:{}s:6:"label1";N;s:6:"appbox";N;s:10:"appboxshow";a:1:{s:7:"ontimer";s:80:"resize::resize_object( c("appBox"), array("h" => 256) );
+$self->enable = false;";}s:8:"--fmedit";a:1:{s:6:"onshow";s:31:"c("appBoxShow")->enable = true;";}}}
